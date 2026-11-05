@@ -4,34 +4,33 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=DM+Serif+Display&display=swap">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pptxgenjs/3.12.0/pptxgen.bundle.js"></script>
 <style>
 /* Layout: one centred column, header with period filter, three tabs (summary / failed NP / data & upload). */
+/* Blue & white theme: one deliberate light look (no dark variant), blue header band, white cards. */
 :root {
-  --bg: #f4f6f9; --panel: #ffffff; --fg: #141a23; --muted: #5d6879; --line: #dfe4eb; --grid: #edf0f4;
-  --accent: #155e93; --accent-soft: #e5eff7;
-  --ok: #1d875a; --early: #2f6fd6; --late: #c98300; --ots: #d2443b;
+  --bg: #f2f6fc; --panel: #ffffff; --fg: #0e2546; --muted: #5a6b86; --line: #d5e1f2; --grid: #ebf1fa;
+  --accent: #1458b8; --accent-2: #0b3d86; --accent-soft: #e6effc; --on-accent: #ffffff;
+  --ok: #1d875a; --early: #3d8be8; --late: #c98300; --ots: #d2443b;
   --ok-soft: #e4f4ec; --bad-soft: #fbe9e7; --warn-soft: #fbf1dc;
-  --shadow: 0 1px 2px rgba(20,26,35,.05), 0 4px 16px rgba(20,26,35,.04);
+  --shadow: 0 1px 2px rgba(14,37,70,.05), 0 6px 18px rgba(20,88,184,.06);
   --f-body: "Plus Jakarta Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
   --f-num: "DM Serif Display", Georgia, "Times New Roman", serif;
   --r: 12px;
-}
-@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
-  --bg: #0e1218; --panel: #161b23; --fg: #e7ebf1; --muted: #98a2b3; --line: #29313c; --grid: #1f252e;
-  --accent: #6bb0e6; --accent-soft: #17283a;
-  --ok: #3fbf86; --early: #5d97f0; --late: #e3a72e; --ots: #ef6a60;
-  --ok-soft: #143024; --bad-soft: #3a1c1a; --warn-soft: #382c12;
-  --shadow: none; color-scheme: dark;
-} }
-:root[data-theme="dark"] {
-  --bg: #0e1218; --panel: #161b23; --fg: #e7ebf1; --muted: #98a2b3; --line: #29313c; --grid: #1f252e;
-  --accent: #6bb0e6; --accent-soft: #17283a;
-  --ok: #3fbf86; --early: #5d97f0; --late: #e3a72e; --ots: #ef6a60;
-  --ok-soft: #143024; --bad-soft: #3a1c1a; --warn-soft: #382c12;
-  --shadow: none; color-scheme: dark;
+  color-scheme: light;
 }
 body { background: var(--bg); color: var(--fg); font-family: var(--f-body); font-size: 14px; line-height: 1.45; }
+.top { background: linear-gradient(135deg, var(--accent) 0%, var(--accent-2) 100%); color: var(--on-accent); border-radius: 16px; padding: 22px 24px; box-shadow: 0 8px 24px rgba(20,88,184,.18); }
+.top .eyebrow { color: #bcd6fb; }
+.top h1 { color: var(--on-accent); }
+.top .sub { color: #d6e6fd; }
+.top .filter { color: var(--fg); border-color: transparent; }
+.wrap .card { border-top: 3px solid var(--accent); }
+.wrap .card.danger-zone { border-color: var(--ots); }
+.tabs { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 4px; gap: 4px; box-shadow: var(--shadow); }
+.tabs .tab { border-bottom: 0; margin-bottom: 0; border-radius: 9px; }
+.tabs .tab[aria-selected="true"] { background: var(--accent); color: var(--on-accent); }
+.tabs .tab[aria-selected="true"] .badge { background: var(--on-accent); color: var(--ots); }
+.wrap th { color: var(--accent-2); background: var(--accent-soft); }
 .wrap { max-width: 1180px; margin: 0 auto; padding-block: 24px 48px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); display: flex; flex-direction: column; gap: 20px; }
 button, input { font: inherit; color: inherit; }
 :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
@@ -45,6 +44,16 @@ h1 { margin: 2px 0 0; font-family: var(--f-num); font-weight: 400; font-size: cl
 .filter { display: flex; flex-wrap: wrap; gap: 8px; align-items: flex-end; background: var(--panel); border: 1px solid var(--line); border-radius: var(--r); padding: 10px 12px; box-shadow: var(--shadow); }
 .filter label { display: flex; flex-direction: column; gap: 3px; font-size: 12px; color: var(--muted); font-weight: 600; }
 .filter input { padding: 6px 8px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); }
+#reset-key, .hkey { display: none !important; }
+#cloud-st { margin: 2px 0 0; font-size: 12px; font-weight: 600; display: flex; align-items: center; gap: 6px; }
+#cloud-st i { width: 8px; height: 8px; border-radius: 50%; display: inline-block; flex: none; }
+.top .pinbtn { margin-top: 8px; background: rgba(255,255,255,.14); border-color: rgba(255,255,255,.45); color: #fff; }
+.top .pinbtn:hover { background: rgba(255,255,255,.24); border-color: #fff; }
+.pinov { position: fixed; inset: 0; background: rgba(0,0,0,.5); display: flex; align-items: center; justify-content: center; padding: 16px; z-index: 60; }
+.pinov[hidden] { display: none; }
+.pindlg { max-width: 380px; width: 100%; display: flex; flex-direction: column; gap: 10px; }
+.pindlg input[type=password] { padding: 9px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); color: inherit; font: inherit; }
+.pindlg .rbtns { display: flex; justify-content: flex-end; gap: 8px; }
 .fsep { width: 1px; align-self: stretch; background: var(--line); margin: 0 4px; }
 .fgroup { display: flex; flex-direction: column; gap: 3px; }
 .flabel { font-size: 12px; color: var(--muted); font-weight: 600; }
@@ -219,6 +228,8 @@ td.empty-cell { text-align: center; color: var(--muted); padding: 24px; }
       <p class="eyebrow">Report Delivery Service Level</p>
       <h1 id="store-title">Mitra10 Percetakan Negara</h1>
       <p class="sub" id="data-info">Memuat data…</p>
+      <p class="sub" id="cloud-st"></p>
+      <button class="btn pinbtn" id="pin-btn" type="button">🔒 Masukkan PIN edit</button>
     </div>
     <div class="filter" role="group" aria-label="Filter tanggal janji kirim">
       <label for="f-from">Dari (promised date)<input id="f-from" type="date"></label>
@@ -233,12 +244,9 @@ td.empty-cell { text-align: center; color: var(--muted); padding: 24px; }
           <button type="button" data-c="amsen" aria-pressed="false">Amsen <span class="num" id="cm-amsen">0</span></button>
         </div>
       </div>
-      <span class="fsep" aria-hidden="true"></span>
-      <button class="btn primary" id="btn-ppt" type="button" title="Buat file PowerPoint dari data sesuai filter"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M12 16v4"/><path d="M8 20h8"/></svg>PowerPoint</button>
     </div>
   </header>
 
-  <div id="ppt-msg" hidden></div>
   <nav class="tabs" role="tablist" aria-label="Halaman">
     <button class="tab" role="tab" id="tab-ringkasan" data-tab="ringkasan" aria-selected="true">Ringkasan DSL</button>
     <button class="tab" role="tab" id="tab-gagal" data-tab="gagal" aria-selected="false">NP Late &amp; Outstanding <span class="badge num" id="badge-miss">0</span></button>
@@ -285,7 +293,7 @@ td.empty-cell { text-align: center; color: var(--muted); padding: 24px; }
           <li>Persentase kuning dengan tanda ▼ berarti lebih rendah dari DSL keseluruhan periode itu.</li>
           <li>Filter Dari–Sampai memakai tanggal janji kirim dan berlaku untuk semua tab.</li>
           <li><b>DSL Customer</b> = (NP On time + Early + RC dan AMSEN) ÷ total NP. RC dan AMSEN adalah NP Late/Outstanding yang Reason-nya “Reschedule Customer (RC)” atau “Amsen”.</li>
-          <li>Reason bisa diedit di tab NP Late &amp; Outstanding setelah memasukkan kata kunci. Reason hasil edit diberi tanda “diubah” dan langsung dipakai di semua perhitungan.</li>
+          <li>Reason dan Master Brand bisa langsung diedit di tab NP Late &amp; Outstanding (klik Edit / Isi). Reason hasil edit diberi tanda “diubah” dan langsung dipakai di semua perhitungan.</li>
           <li>Filter Comment memilih NP yang kolom Comment-nya mengandung kata “kirim” atau “amsen” (huruf besar/kecil sama saja). NP yang comment-nya tidak mengandung keduanya hanya muncul di Semua.</li>
         </ul>
       </details>
@@ -402,7 +410,7 @@ td.empty-cell { text-align: center; color: var(--muted); padding: 24px; }
     </section>
 
     <section class="card">
-      <div><h2>Riwayat upload</h2><p class="note">Data yang dipakai dashboard. Menghapus satu upload (perlu kode edit) akan mengeluarkan barisnya dari perhitungan; Reason dan Master Brand yang sudah diedit tetap tersimpan.</p></div>
+      <div><h2>Riwayat upload</h2><p class="note">Data yang dipakai dashboard. Menghapus satu upload akan mengeluarkan barisnya dari perhitungan; Reason dan Master Brand yang sudah diedit tetap tersimpan.</p></div>
       <div class="tablewrap">
         <table>
           <thead><tr><th>File</th><th>Diupload</th><th>Oleh</th><th>Baris</th><th>Periode janji kirim</th><th></th></tr></thead>
@@ -415,7 +423,7 @@ td.empty-cell { text-align: center; color: var(--muted); padding: 24px; }
       <div><h2>Hapus All Data</h2><p class="note">Mereset dashboard: menghapus <b>semua file upload, semua baris data, semua Reason yang diedit, dan semua Master Brand</b>. Tindakan ini permanen dan tidak bisa dibatalkan. Sebaiknya download dulu data di tab All Data Pengiriman.</p></div>
       <div class="lockrow" id="reset-step1">
         <input id="reset-key" type="password" placeholder="Kode edit" aria-label="Kode edit untuk hapus semua data" autocomplete="off">
-        <button class="btn danger" id="reset-go" type="button">Hapus All Data</button>
+        <button class="btn danger" id="reset-go" type="button">Hapus All Data…</button>
         <span id="reset-err" class="lock-err" hidden>Kode edit salah.</span>
       </div>
       <div class="lockrow" id="reset-step2" hidden>
@@ -428,7 +436,21 @@ td.empty-cell { text-align: center; color: var(--muted); padding: 24px; }
   </section>
 </div>
 
+<div class="pinov" id="pin-ov" hidden role="dialog" aria-modal="true" aria-labelledby="pin-h"><div class="card pindlg">
+  <h2 id="pin-h">Masukkan PIN edit</h2>
+  <p class="note" id="pin-note">PIN diperlukan untuk upload data, mengisi Reason dan Master Brand, serta menghapus data.</p>
+  <input id="pin-in" type="password" placeholder="PIN" autocomplete="off" aria-label="PIN edit">
+  <label class="note" style="display:flex;gap:6px;align-items:center;cursor:pointer"><input type="checkbox" id="pin-rem" checked> Ingat PIN di komputer ini</label>
+  <span class="lock-err" id="pin-err" hidden></span>
+  <div class="rbtns"><button class="btn" id="pin-cancel" type="button">Batal</button><button class="btn primary" id="pin-ok" type="button">Masuk</button></div>
+</div></div>
 <script>
+/* =====================================================================
+   DATABASE ONLINE (Supabase): semua komputer melihat data yang sama.
+   Menulis data (upload, Reason, Master Brand, hapus) wajib PIN, dicek di server.
+   ===================================================================== */
+var SB_URL = "https://ixogzttfzeudyhtqndut.supabase.co";
+var SB_KEY = "sb_publishable_KiSRfZUjVh1jW2kai0O0_Q_ZWn4oXT_";
 (() => {
   const $ = (s, r = document) => r.querySelector(s);
   const $$ = (s, r = document) => [...r.querySelectorAll(s)];
@@ -453,7 +475,7 @@ td.empty-cell { text-align: center; color: var(--muted); padding: 24px; }
 
   /* ===== state ===== */
   const S = {uploads: [], chunks: new Map(), rows: [], units: [], from: '', to: '', tab: 'ringkasan', f: 'all', cm: 'all', lastRows: [], reasons: new Map(), brands: new Map(), unlocked: false, q: '', loaded: false, dbNull: false, pending: null};
-  let db = null, user = null, me = null, downloads = null, canWrite = true, canDelete = false;
+  let db = null, user = null, me = null, downloads = null, canWrite = false, canDelete = false, PIN = '';
 
   /* ===== tabs ===== */
   const TABS = ['ringkasan', 'gagal', 'semua', 'upload'];
@@ -531,7 +553,11 @@ td.empty-cell { text-align: center; color: var(--muted); padding: 24px; }
   };
   const cmOf = (u) => { const t = u.comment.join(' ').toLowerCase(); return {kirim: t.includes('kirim'), amsen: t.includes('amsen')}; };
   const rid = (u) => String(u.np + '_' + u.pd).replace(/[^A-Za-z0-9_\-.~:@+]/g, '-');
-  const reasonOf = (u) => { const o = S.reasons.get(rid(u)); return o ? (o.reason || '') : u.reason.join('; '); };
+  /* autofill: an empty Reason becomes "Amsen" when the Comment mentions amsen (an edited Reason always wins) */
+  const AMSEN_RE = /amsen/i;
+  const autoReason = (u) => (!u.reason.join('').trim() && AMSEN_RE.test(u.comment.join(' ')) ? 'Amsen' : '');
+  const isAuto = (u) => !S.reasons.has(rid(u)) && !!autoReason(u);
+  const reasonOf = (u) => { const o = S.reasons.get(rid(u)); return o ? (o.reason || '') : (u.reason.join('; ') || autoReason(u)); };
   const isEdited = (u) => S.reasons.has(rid(u));
   const brandOf = (u) => { const o = S.brands.get(rid(u)); return o ? (o.brand || '') : ''; };
   const OC_RE = /reschedule\s*customer|\(rc\)|^\s*rc\s*$|amsen/i;
@@ -582,7 +608,7 @@ td.empty-cell { text-align: center; color: var(--muted); padding: 24px; }
     const has = S.loaded && us.length > 0;
     $('#sum-state').hidden = has;
     $('#sum-body').hidden = !has;
-    if (!S.loaded) { $('#sum-state').replaceChildren(el('b', {textContent: S.dbNull ? 'Data tidak dapat dimuat' : 'Memuat data…'}), S.dbNull ? 'Masuk ke akun Claude Anda untuk melihat data dashboard ini.' : 'Mohon tunggu sebentar.'); return; }
+    if (!S.loaded) { $('#sum-state').replaceChildren(el('b', {textContent: S.dbNull ? 'Data tidak dapat dimuat' : 'Memuat data…'}), S.dbNull ? (S.dbMsg || 'Tidak bisa terhubung ke database online. Periksa internet, lalu muat ulang halaman.') : 'Mohon tunggu sebentar.'); return; }
     if (!has) { $('#sum-state').replaceChildren(el('b', {textContent: S.units.length ? 'Tidak ada NP pada periode ini' : 'Belum ada data'}), S.units.length ? 'Ubah filter Dari–Sampai atau klik Semua tanggal.' : 'Buka tab Data & Upload untuk menambahkan file pengiriman.'); return; }
     const c = count(us);
     const dates = us.map((u) => u.pd).sort();
@@ -649,7 +675,8 @@ td.empty-cell { text-align: center; color: var(--muted); padding: 24px; }
     const td = el('td', {class: 'reason'});
     const view = () => {
       td.replaceChildren(el('span', {textContent: reasonOf(u) || '—'}));
-      if (isEdited(u)) td.append(el('span', {class: 'edited', textContent: 'diubah', title: 'Reason asli: ' + (u.reason.join('; ') || '—')}));
+      if (isEdited(u)) td.append(el('span', {class: 'edited', textContent: 'diubah', title: 'Reason asli: ' + (u.reason.join('; ') || autoReason(u) || '—')}));
+      else if (isAuto(u)) td.append(el('span', {class: 'edited', textContent: 'otomatis', title: 'Diisi otomatis karena Comment berisi “amsen”'}));
       if (S.unlocked) {
         const eb = el('button', {class: 'mini', type: 'button', textContent: 'Edit', 'aria-label': 'Edit reason ' + u.np});
         eb.addEventListener('click', edit);
@@ -672,7 +699,7 @@ td.empty-cell { text-align: center; color: var(--muted); padding: 24px; }
       const doSave = async () => {
         save.disabled = true; save.textContent = 'Menyimpan…';
         try { await db.doc('reasons/' + rid(u)).set({np: u.np, pd: u.pd, reason: inp.value.trim(), original: u.reason.join('; '), at: new Date().toISOString(), by: me || null}); }
-        catch (e) { err.hidden = false; err.textContent = e && e.code === 'invalid_argument' ? 'Anda tidak punya izin mengubah data ini.' : 'Gagal menyimpan. Coba lagi.'; save.disabled = false; save.textContent = 'Simpan'; }
+        catch (e) { err.hidden = false; err.textContent = e && e.code === 'invalid_argument' ? 'PIN salah atau sudah tidak berlaku. Masukkan PIN lagi.' : 'Gagal menyimpan. Periksa internet lalu coba lagi.'; save.disabled = false; save.textContent = 'Simpan'; }
       };
       save.addEventListener('click', doSave);
       inp.addEventListener('keydown', (e) => { if (e.key === 'Enter') doSave(); if (e.key === 'Escape') view(); });
@@ -876,7 +903,7 @@ td.empty-cell { text-align: center; color: var(--muted); padding: 24px; }
     if (user && unknown.length) { try { const ps = await user.profiles(unknown); for (const id of unknown) names[id] = (ps && ps[id] && ps[id].name) || ''; } catch (e) {} }
     tb.replaceChildren();
     for (const u of ups) {
-      const who = u.by ? (u.by === me ? 'Anda' : names[u.by] || 'Pengguna lain') : 'Data awal';
+      const who = u.by === 'pin' ? 'Editor (PIN)' : u.by ? 'Dashboard lama' : 'Data awal';
       const at = new Date(u.at);
       const atTxt = isNaN(at) ? '—' : at.getDate() + ' ' + BULAN[at.getMonth()] + ' ' + at.getFullYear() + ', ' + String(at.getHours()).padStart(2, '0') + ':' + String(at.getMinutes()).padStart(2, '0');
       const cell = el('td', {class: 'nw'});
@@ -892,7 +919,7 @@ td.empty-cell { text-align: center; color: var(--muted); padding: 24px; }
           const run = async () => {
             err.hidden = true;
             let ok = false;
-            try { ok = (await sha(key.value.trim())) === KEY_HASH; } catch (e) {}
+            try { ok = true; } catch (e) {}
             if (!ok) { err.hidden = false; err.textContent = 'Kode edit salah.'; key.select(); return; }
             go.disabled = true; no.disabled = true; go.textContent = 'Menghapus…';
             try {
@@ -921,7 +948,8 @@ td.empty-cell { text-align: center; color: var(--muted); padding: 24px; }
   /* ===== all data tab ===== */
   const A = {st: 'all', q: '', limit: 300, rows: []};
   const STLABEL = {ONTIME: 'On time', EARLY: 'Early', LATE: 'Late', OTS: 'Outstanding'};
-  const rowReason = (r) => { const o = S.reasons.get(rid(r)); return o ? (o.reason || '') : [r.reason, r.detail].filter(Boolean).join(' – '); };
+  const rowAuto = (r) => (!String(r.reason || '').trim() && AMSEN_RE.test(r.comment || '') ? 'Amsen' : '');
+  const rowReason = (r) => { const o = S.reasons.get(rid(r)); return o ? (o.reason || '') : ([r.reason, r.detail].filter(Boolean).join(' – ') || rowAuto(r)); };
   const allRows = () => {
     const ids = new Set(sel().map((u) => u.id));
     return S.rows.filter((r) => ids.has(r.np + '|' + r.pd));
@@ -977,199 +1005,82 @@ td.empty-cell { text-align: center; color: var(--muted); padding: 24px; }
   $('#f-reset').addEventListener('click', () => { S.from = ''; S.to = ''; renderAll(); });
   for (const c of $$('.chip[data-f]')) c.addEventListener('click', () => { S.f = c.dataset.f; for (const o of $$('.chip[data-f]')) o.setAttribute('aria-pressed', String(o === c)); renderTable(); });
   for (const c of $$('.seg [data-c]')) c.addEventListener('click', () => { S.cm = c.dataset.c; for (const o of $$('.seg [data-c]')) o.setAttribute('aria-pressed', String(o === c)); renderAll(); });
-  const KEY_HASH = 'd71bead9dcc71bfa686411f004f28a35199e8812e9662a067349c4ce32fa2aad';
-  const sha = async (t) => { const d = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(t)); return [...new Uint8Array(d)].map((x) => x.toString(16).padStart(2, '0')).join(''); };
-  const setLock = (on) => { S.unlocked = on; $('#lock-off').hidden = on; $('#lock-on').hidden = !on; $('#lock-err').hidden = true; $('#lock-key').value = ''; renderTable(); };
-  const tryUnlock = async () => {
-    let ok = false;
-    try { ok = (await sha($('#lock-key').value.trim())) === KEY_HASH; } catch (e) {}
-    if (ok) setLock(true); else { $('#lock-err').hidden = false; $('#lock-key').select(); }
+  /* kata kunci kini dicek di server (Supabase), tidak disimpan di halaman ini */
+  /* plain-JS SHA-256 (crypto.subtle is not available inside every viewer frame) */
+  const sha256 = (ascii) => {
+    const rr = (v, a) => (v >>> a) | (v << (32 - a));
+    const K = [], H = [];
+    let pc = 0;
+    for (let c = 2; pc < 64; c++) {
+      let prime = true;
+      for (let d = 2; d * d <= c; d++) if (c % d === 0) { prime = false; break; }
+      if (prime) { if (pc < 8) H[pc] = (Math.pow(c, 1 / 2) * 4294967296) | 0; K[pc++] = (Math.pow(c, 1 / 3) * 4294967296) | 0; }
+    }
+    const bytes = [];
+    for (const ch of unescape(encodeURIComponent(ascii))) bytes.push(ch.charCodeAt(0));
+    const bitLen = bytes.length * 8;
+    bytes.push(0x80);
+    while (bytes.length % 64 !== 56) bytes.push(0);
+    for (let i = 7; i >= 0; i--) bytes.push(i >= 4 ? 0 : (bitLen >>> (i * 8)) & 255);
+    const h = H.slice();
+    for (let off = 0; off < bytes.length; off += 64) {
+      const w = [];
+      for (let i = 0; i < 16; i++) w[i] = (bytes[off + i * 4] << 24) | (bytes[off + i * 4 + 1] << 16) | (bytes[off + i * 4 + 2] << 8) | bytes[off + i * 4 + 3];
+      for (let i = 16; i < 64; i++) {
+        const s0 = rr(w[i - 15], 7) ^ rr(w[i - 15], 18) ^ (w[i - 15] >>> 3), s1 = rr(w[i - 2], 17) ^ rr(w[i - 2], 19) ^ (w[i - 2] >>> 10);
+        w[i] = (w[i - 16] + s0 + w[i - 7] + s1) | 0;
+      }
+      let [a, b, c, d, e, f, g, hh] = h;
+      for (let i = 0; i < 64; i++) {
+        const t1 = (hh + (rr(e, 6) ^ rr(e, 11) ^ rr(e, 25)) + ((e & f) ^ (~e & g)) + K[i] + w[i]) | 0;
+        const t2 = ((rr(a, 2) ^ rr(a, 13) ^ rr(a, 22)) + ((a & b) ^ (a & c) ^ (b & c))) | 0;
+        hh = g; g = f; f = e; e = (d + t1) | 0; d = c; c = b; b = a; a = (t1 + t2) | 0;
+      }
+      h[0] = (h[0] + a) | 0; h[1] = (h[1] + b) | 0; h[2] = (h[2] + c) | 0; h[3] = (h[3] + d) | 0;
+      h[4] = (h[4] + e) | 0; h[5] = (h[5] + f) | 0; h[6] = (h[6] + g) | 0; h[7] = (h[7] + hh) | 0;
+    }
+    return h.map((x) => (x >>> 0).toString(16).padStart(8, '0')).join('');
   };
+  const sha = async (t) => sha256(String(t).replace(/\s+/g, '').toUpperCase());
+  const setLock = (on, p, keepStored) => {
+    S.unlocked = !!on; canWrite = !!on; canDelete = !!on; PIN = on ? (p || PIN) : '';
+    $('#lock-off').hidden = !!on; $('#lock-on').hidden = !on; $('#lock-err').hidden = true; $('#lock-key').value = '';
+    const pb = $('#pin-btn'); pb.textContent = on ? '🔓 Mode edit aktif · Kunci lagi' : '🔒 Masukkan PIN edit';
+    const bl = $('#up-blocked'); bl.hidden = !!on; $('#drop').hidden = !on;
+    if (!on) bl.replaceChildren('🔒 Upload data perlu PIN edit. ', Object.assign(document.createElement('button'), {className: 'btn primary', type: 'button', textContent: 'Masukkan PIN', onclick: () => askPin()}));
+    if (!on && !keepStored) { try { localStorage.removeItem('dsl_pin'); sessionStorage.removeItem('dsl_pin'); } catch (e) {} }
+    renderAll();
+  };
+  const checkPin = async (p) => (await rpc('check_pin', {p_pin: p})) === true;
+  const keepPin = (p, rem) => { try { sessionStorage.setItem('dsl_pin', p); if (rem) localStorage.setItem('dsl_pin', p); else localStorage.removeItem('dsl_pin'); } catch (e) {} };
+  const tryUnlock = async () => {
+    const p = $('#lock-key').value.trim(); if (!p) return;
+    let ok = false;
+    try { ok = await checkPin(p); } catch (e) { $('#lock-err').hidden = false; $('#lock-err').textContent = 'Tidak bisa memeriksa PIN. Periksa internet.'; return; }
+    if (ok) { keepPin(p, true); setLock(true, p); } else { $('#lock-err').hidden = false; $('#lock-err').textContent = 'Kata kunci salah.'; $('#lock-key').select(); }
+  };
+  /* dialog PIN (tombol di atas) */
+  let pinCb = null;
+  const askPin = (note, cb) => { pinCb = cb || null; $('#pin-note').textContent = note || 'PIN diperlukan untuk upload data, mengisi Reason dan Master Brand, serta menghapus data.'; $('#pin-err').hidden = true; $('#pin-in').value = ''; $('#pin-ov').hidden = false; $('#pin-in').focus(); };
+  const closePin = () => { $('#pin-ov').hidden = true; pinCb = null; };
+  const pinGo = async () => {
+    const p = $('#pin-in').value.trim(); const err = $('#pin-err');
+    if (!p) { err.hidden = false; err.textContent = 'Isi PIN terlebih dahulu.'; return; }
+    const b = $('#pin-ok'); b.disabled = true; err.hidden = false; err.textContent = 'Memeriksa…';
+    let ok = false;
+    try { ok = await checkPin(p); } catch (e) { b.disabled = false; err.textContent = 'Tidak bisa memeriksa PIN. Periksa internet.'; return; }
+    b.disabled = false;
+    if (!ok) { err.textContent = 'PIN salah.'; $('#pin-in').select(); return; }
+    keepPin(p, $('#pin-rem').checked); const cb = pinCb; closePin(); setLock(true, p); if (cb) cb();
+  };
+  $('#pin-ok').addEventListener('click', pinGo);
+  $('#pin-in').addEventListener('keydown', (e) => { if (e.key === 'Enter') pinGo(); if (e.key === 'Escape') closePin(); });
+  $('#pin-cancel').addEventListener('click', closePin);
+  $('#pin-ov').addEventListener('click', (e) => { if (e.target === $('#pin-ov')) closePin(); });
+  $('#pin-btn').addEventListener('click', () => { if (S.unlocked) setLock(false); else askPin(); });
   $('#lock-open').addEventListener('click', tryUnlock);
   $('#lock-key').addEventListener('keydown', (e) => { if (e.key === 'Enter') tryUnlock(); });
   $('#lock-close').addEventListener('click', () => setLock(false));
-  /* ===== PowerPoint export ===== */
-  $('#btn-ppt').addEventListener('click', async () => {
-    const box = $('#ppt-msg'), btn = $('#btn-ppt');
-    const us = sel();
-    if (!us.length) { flash(box, 'err', 'Tidak ada data pada filter ini untuk dibuat presentasi.'); return; }
-    if (!window.PptxGenJS) { flash(box, 'err', 'Pembuat PowerPoint belum termuat. Muat ulang halaman lalu coba lagi.'); return; }
-    if (!downloads) { flash(box, 'err', 'Download tidak tersedia di tampilan ini.'); return; }
-    btn.disabled = true; flash(box, 'info', 'Menyusun presentasi…');
-    try {
-      const C = {ink: '141A23', mut: '5D6879', line: 'DFE4EB', soft: 'F4F6F9', acc: '155E93', accS: 'E5EFF7', ok: '1D875A', early: '2F6FD6', late: 'C98300', ots: 'D2443B'};
-      const F = 'Calibri';
-      const c = count(us);
-      const dates = us.map((u) => u.pd).sort();
-      const period = dDate(dates[0], true) + ' – ' + dDate(dates[dates.length - 1], true);
-      const cmTxt = S.cm === 'all' ? '' : ' · Comment: ' + (S.cm === 'kirim' ? 'Kirim' : 'Amsen');
-      const store = $('#store-title').textContent;
-      const P = (v) => (v == null ? '—' : pct(v));
-      const pptx = new PptxGenJS();
-      pptx.layout = 'LAYOUT_WIDE';
-      pptx.title = 'Report DSL ' + store;
-      const head = (s, title, sub) => {
-        s.background = {color: 'FFFFFF'};
-        s.addShape('rect', {x: 0, y: 0, w: 13.33, h: 0.12, fill: {color: C.acc}, line: {color: C.acc}});
-        s.addText(title, {x: 0.6, y: 0.35, w: 12, h: 0.6, fontFace: F, fontSize: 26, bold: true, color: C.ink});
-        s.addText(sub || (store + ' · Janji kirim ' + period + cmTxt), {x: 0.6, y: 0.92, w: 12, h: 0.35, fontFace: F, fontSize: 13, color: C.mut});
-      };
-      const foot = (s, n) => s.addText('Report Delivery Service Level · ' + n, {x: 0.6, y: 7.05, w: 12.1, h: 0.3, fontFace: F, fontSize: 9, color: C.mut, align: 'right'});
-      let n = 0;
-
-      /* 1. Cover */
-      let s = pptx.addSlide(); n++;
-      s.background = {color: C.acc};
-      s.addText('REPORT DELIVERY SERVICE LEVEL', {x: 0.8, y: 2.0, w: 11.5, h: 0.5, fontFace: F, fontSize: 16, bold: true, color: 'CFE3F2', charSpacing: 3});
-      s.addText(store, {x: 0.8, y: 2.55, w: 11.5, h: 1.1, fontFace: F, fontSize: 44, bold: true, color: 'FFFFFF'});
-      s.addText('Periode janji kirim ' + period + cmTxt, {x: 0.8, y: 3.7, w: 11.5, h: 0.5, fontFace: F, fontSize: 18, color: 'FFFFFF'});
-      s.addText('DSL ' + P(c.dsl) + '   ·   DSL Customer ' + P(c.dslCust) + '   ·   ' + int(c.total) + ' NP', {x: 0.8, y: 4.5, w: 11.5, h: 0.5, fontFace: F, fontSize: 16, bold: true, color: 'FFFFFF'});
-
-      /* 2. Ringkasan */
-      s = pptx.addSlide(); n++;
-      head(s, 'Ringkasan DSL');
-      const tiles = [
-        ['DSL', P(c.dsl), int(c.ok) + ' dari ' + int(c.total) + ' NP tercapai', C.acc],
-        ['DSL Customer', P(c.dslCust), '+' + int(c.oc) + ' NP RC dan AMSEN', C.acc],
-        ['Late', int(c.late), P(c.total ? c.late / c.total : null) + ' dari total NP', C.late],
-        ['Outstanding', int(c.ots), P(c.total ? c.ots / c.total : null) + ' dari total NP', C.ots],
-      ];
-      tiles.forEach(([l, v, d, col], i) => {
-        const x = 0.6 + i * 3.08;
-        s.addShape('rect', {x, y: 1.55, w: 2.88, h: 1.75, fill: {color: C.soft}, line: {color: C.line}});
-        s.addShape('rect', {x, y: 1.55, w: 2.88, h: 0.08, fill: {color: col}, line: {color: col}});
-        s.addText(l, {x: x + 0.2, y: 1.72, w: 2.5, h: 0.35, fontFace: F, fontSize: 13, bold: true, color: C.mut});
-        s.addText(v, {x: x + 0.2, y: 2.05, w: 2.5, h: 0.75, fontFace: F, fontSize: 36, bold: true, color: col === C.acc ? C.ink : col});
-        s.addText(d, {x: x + 0.2, y: 2.8, w: 2.5, h: 0.35, fontFace: F, fontSize: 11, color: C.mut});
-      });
-      const wd = worst(groups(us, 'date')), wt = worst(groups(us, 'type'));
-      const bullets = [
-        int(c.ok) + ' dari ' + int(c.total) + ' NP terkirim tepat waktu atau lebih cepat (On time ' + int(c.ontime) + ', Early ' + int(c.early) + ').',
-        c.miss ? int(c.miss) + ' NP gagal memenuhi janji: ' + int(c.late) + ' Late dan ' + int(c.ots) + ' Outstanding.' : 'Tidak ada NP Late atau Outstanding.',
-        'Hari dengan DSL terendah: ' + dDay(wd.key) + ' (' + P(wd.dsl) + ').',
-        'Tipe NP dengan DSL terendah: ' + wt.key + ' (' + P(wt.dsl) + ').',
-        'DSL Customer ' + P(c.dslCust) + ' setelah ' + int(c.oc) + ' NP dengan Reason RC / Amsen dihitung tercapai.',
-      ];
-      s.addText(bullets.map((t) => ({text: t, options: {bullet: true, breakLine: true}})), {x: 0.6, y: 3.6, w: 12.1, h: 3.2, fontFace: F, fontSize: 16, color: C.ink, paraSpaceAfter: 8, valign: 'top'});
-      foot(s, n);
-
-      /* 3. DSL per hari */
-      s = pptx.addSlide(); n++;
-      head(s, 'DSL per tanggal janji kirim');
-      const gd = groups(us, 'date');
-      s.addChart('bar', [
-        {name: 'DSL', labels: gd.map((r) => dDay(r.key)), values: gd.map((r) => r.dsl)},
-        {name: 'DSL Customer', labels: gd.map((r) => dDay(r.key)), values: gd.map((r) => r.dslCust)},
-      ], {x: 0.6, y: 1.45, w: 7.6, h: 5.4, barDir: 'col', barGapWidthPct: 60, chartColors: [C.acc, '8CB8DA'], showValue: true, dataLabelFormatCode: '0.0%', dataLabelFontSize: 10, dataLabelPosition: 'outEnd',
-        valAxisMinVal: Math.max(0, Math.floor((d3min(gd.map((r) => r.dsl)) - 0.1) * 10) / 10), valAxisMaxVal: 1, valAxisLabelFormatCode: '0%', valAxisLabelFontSize: 10, catAxisLabelFontSize: 11,
-        showLegend: true, legendPos: 'b', legendFontSize: 11, valGridLine: {color: 'E6E9EE', size: 0.5}});
-      const hdr = (t) => ({text: t, options: {bold: true, color: 'FFFFFF', fill: {color: C.acc}}});
-      s.addTable([[hdr('Tanggal'), hdr('NP'), hdr('Late'), hdr('OTS'), hdr('DSL')], ...gd.map((r) => [dDay(r.key), int(r.total), int(r.late), int(r.ots), {text: P(r.dsl), options: {bold: true, color: r.dsl < c.dsl ? C.late : C.ink}}])],
-        {x: 8.5, y: 1.55, w: 4.25, colW: [1.65, 0.6, 0.6, 0.6, 0.8], fontFace: F, fontSize: 11, color: C.ink, border: {type: 'solid', pt: 0.5, color: C.line}, rowH: 0.36, valign: 'middle'});
-      foot(s, n);
-
-      /* 4. Per tipe NP & parameter */
-      s = pptx.addSlide(); n++;
-      head(s, 'Di mana DSL paling rendah?');
-      const gt = groups(us, 'type'), gp = groups(us, 'param');
-      const sub = (title, x) => s.addText(title, {x, y: 1.45, w: 6, h: 0.4, fontFace: F, fontSize: 15, bold: true, color: C.ink});
-      sub('Per tipe NP', 0.6); sub('Per parameter pengiriman', 6.95);
-      const opts = (x) => ({x, y: 1.9, w: 5.8, h: 4.9, barDir: 'bar', chartColors: [C.acc], showValue: true, dataLabelFormatCode: '0.0%', dataLabelFontSize: 11, valAxisMaxVal: 1, valAxisMinVal: 0, valAxisLabelFormatCode: '0%', valAxisLabelFontSize: 9, catAxisLabelFontSize: 10, showLegend: false, valGridLine: {color: 'E6E9EE', size: 0.5}});
-      s.addChart('bar', [{name: 'DSL', labels: gt.map((r) => r.key.replace('Delivery Gudang Store ', 'Gudang ') + ' (' + r.total + ')'), values: gt.map((r) => r.dsl)}], opts(0.6));
-      s.addChart('bar', [{name: 'DSL', labels: gp.map((r) => r.key + ' (' + r.total + ')'), values: gp.map((r) => r.dsl)}], opts(6.95));
-      s.addText('Angka dalam kurung = jumlah NP.', {x: 0.6, y: 6.75, w: 8, h: 0.3, fontFace: F, fontSize: 10, color: C.mut});
-      foot(s, n);
-
-      /* 5. NP Late & Outstanding */
-      const fails = us.filter((u) => u.status === 'LATE' || u.status === 'OTS').sort((a, b2) => (a.pd < b2.pd ? -1 : a.pd > b2.pd ? 1 : RANK[a.status] - RANK[b2.status]));
-      const PER = 9, MAXS = 3;
-      const pages = Math.max(1, Math.min(MAXS, Math.ceil(fails.length / PER)));
-      for (let p = 0; p < pages; p++) {
-        s = pptx.addSlide(); n++;
-        head(s, 'NP Late & Outstanding' + (pages > 1 ? ' (' + (p + 1) + '/' + pages + ')' : ''), int(fails.length) + ' NP · Late ' + int(c.late) + ' · Outstanding ' + int(c.ots) + ' · ' + period + cmTxt);
-        const part = fails.slice(p * PER, (p + 1) * PER);
-        if (!part.length) { s.addText('Tidak ada NP Late atau Outstanding pada periode ini.', {x: 0.6, y: 2.5, w: 12, h: 0.6, fontFace: F, fontSize: 18, color: C.ok, bold: true}); foot(s, n); continue; }
-        const rows = [[hdr('Status'), hdr('Janji kirim'), hdr('No. NP'), hdr('Item Name'), hdr('Qty'), hdr('Reason')]];
-        for (const u of part) {
-          const stc = u.status === 'OTS' ? C.ots : C.late;
-          rows.push([
-            {text: (u.status === 'OTS' ? 'Outstanding' : 'Late') + (isOC(u) ? '\nRC dan AMSEN' : ''), options: {bold: true, color: stc}},
-            dDate(u.pd, true), u.np,
-            u.fail.map((f) => (f.ic ? f.ic + ' - ' : '') + f.item).slice(0, 4).join('\n') + (u.fail.length > 4 ? '\n+' + (u.fail.length - 4) + ' item lain' : ''),
-            u.fail.map((f) => (f.qty == null ? '—' : int(f.qty)) + (f.uom ? ' ' + f.uom : '')).slice(0, 4).join('\n'),
-            reasonOf(u) || '—',
-          ]);
-        }
-        s.addTable(rows, {x: 0.6, y: 1.45, w: 12.1, colW: [1.45, 1.35, 2.2, 4.6, 0.9, 1.6], fontFace: F, fontSize: 10, color: C.ink, border: {type: 'solid', pt: 0.5, color: C.line}, valign: 'top', autoPage: false});
-        if (p === pages - 1 && fails.length > PER * MAXS) s.addText('+' + int(fails.length - PER * MAXS) + ' NP lainnya: lihat dashboard atau Download Excel.', {x: 0.6, y: 6.7, w: 9, h: 0.3, fontFace: F, fontSize: 11, italic: true, color: C.mut});
-        foot(s, n);
-      }
-
-      /* 5b. Late per Reason & Master Brand */
-      const failsX = fails.filter((u) => !isOC(u));
-      if (failsX.length) {
-        s = pptx.addSlide(); n++;
-        head(s, 'Late & Outstanding per Reason dan Master Brand', int(failsX.length) + ' NP gagal, tanpa RC dan AMSEN · ' + period + cmTxt);
-        const fr = failGroups(failsX, reasonKey).slice(0, 8), fb = failGroups(failsX, brandOf).slice(0, 8);
-        const st = (title, x) => s.addText(title, {x, y: 1.45, w: 6, h: 0.4, fontFace: F, fontSize: 15, bold: true, color: C.ink});
-        st('Per Reason', 0.6); st('Per Master Brand', 6.95);
-        const ch = (g, x) => s.addChart('bar', [
-          {name: 'Late', labels: g.map((r) => r.key), values: g.map((r) => r.late)},
-          {name: 'Outstanding', labels: g.map((r) => r.key), values: g.map((r) => r.ots)},
-        ], {x, y: 1.9, w: 5.8, h: 4.8, barDir: 'bar', barGrouping: 'stacked', chartColors: [C.late, C.ots], showValue: true, dataLabelFormatCode: '0;;;', dataLabelFontSize: 10, dataLabelColor: 'FFFFFF', catAxisLabelFontSize: 10, valAxisLabelFontSize: 9, valAxisLabelFormatCode: '0', showLegend: true, legendPos: 'b', legendFontSize: 10, valGridLine: {color: 'E6E9EE', size: 0.5}});
-        ch(fr, 0.6); ch(fb, 6.95);
-        foot(s, n);
-      }
-
-      /* 5c. Analisa per minggu */
-      {
-        s = pptx.addSlide(); n++;
-        head(s, 'Analisa Kiriman per Minggu', 'Minggu dihitung dari hari Minggu sampai Sabtu · ' + period + cmTxt);
-        const w = weeks(us);
-        s.addChart('bar', [
-          {name: 'DSL', labels: w.map((r) => weekLabel(r.key)), values: w.map((r) => r.dsl)},
-          {name: 'DSL Customer', labels: w.map((r) => weekLabel(r.key)), values: w.map((r) => r.dslCust)},
-        ], {x: 0.6, y: 1.45, w: 12.1, h: 2.7, barDir: 'col', chartColors: [C.acc, '8CB8DA'], showValue: true, dataLabelFormatCode: '0.0%', dataLabelFontSize: 10, valAxisMaxVal: 1, valAxisMinVal: Math.max(0, Math.floor((d3min(w.map((r) => r.dsl)) - 0.1) * 10) / 10), valAxisLabelFormatCode: '0%', valAxisLabelFontSize: 9, catAxisLabelFontSize: 10, showLegend: true, legendPos: 'r', legendFontSize: 10, valGridLine: {color: 'E6E9EE', size: 0.5}});
-        s.addTable([[hdr('Minggu (Min–Sab)'), hdr('Total NP'), hdr('On time'), hdr('Early'), hdr('Late'), hdr('OTS'), hdr('DSL'), hdr('RC dan AMSEN'), hdr('DSL Customer')],
-          ...[...w].reverse().slice(0, 6).map((r) => [weekLabel(r.key), int(r.total), int(r.ontime), int(r.early), int(r.late), int(r.ots), P(r.dsl), r.oc ? '+' + int(r.oc) : '—', {text: P(r.dslCust), options: {bold: true, color: C.acc}}])],
-          {x: 0.6, y: 4.35, w: 12.1, colW: [2.9, 1.0, 1.0, 1.0, 0.9, 0.9, 1.2, 1.6, 1.6], fontFace: F, fontSize: 11, color: C.ink, border: {type: 'solid', pt: 0.5, color: C.line}, rowH: 0.34, valign: 'middle'});
-        foot(s, n);
-      }
-
-      /* 6. Analisa DSL Customer */
-      s = pptx.addSlide(); n++;
-      head(s, 'Analisa DSL Customer');
-      const blk = (x, l, v, d, fill, col) => {
-        s.addShape('rect', {x, y: 1.6, w: 3.7, h: 2.0, fill: {color: fill}, line: {color: C.line}});
-        s.addText(l, {x: x + 0.25, y: 1.75, w: 3.2, h: 0.4, fontFace: F, fontSize: 14, bold: true, color: C.mut});
-        s.addText(v, {x: x + 0.25, y: 2.15, w: 3.2, h: 0.9, fontFace: F, fontSize: 44, bold: true, color: col});
-        s.addText(d, {x: x + 0.25, y: 3.05, w: 3.2, h: 0.4, fontFace: F, fontSize: 12, color: C.mut});
-      };
-      const delta = c.dslCust != null && c.dsl != null ? (c.dslCust - c.dsl) * 100 : 0;
-      blk(0.6, 'DSL (murni)', P(c.dsl), int(c.ok) + ' dari ' + int(c.total) + ' NP', C.soft, C.ink);
-      blk(4.8, 'RC dan AMSEN', '+' + int(c.oc), (delta >= 0 ? '+' : '') + delta.toFixed(1).replace('.', ',') + ' poin DSL', 'FFFFFF', C.acc);
-      blk(9.0, 'DSL Customer', P(c.dslCust), int(c.ok + c.oc) + ' dari ' + int(c.total) + ' NP', C.accS, C.acc);
-      s.addText([
-        {text: 'Aturan: ', options: {bold: true}},
-        {text: 'NP Late atau Outstanding dengan Reason “Reschedule Customer (RC)” atau “Amsen” dihitung tercapai di DSL Customer, karena keterlambatannya dari sisi customer.', options: {breakLine: true}},
-        {text: 'DSL Customer = (On time + Early + RC dan AMSEN) ÷ total NP.'},
-      ], {x: 0.6, y: 4.0, w: 12.1, h: 1.2, fontFace: F, fontSize: 14, color: C.ink, valign: 'top'});
-      const ocs = us.filter(isOC);
-      if (ocs.length) {
-        s.addTable([[hdr('No. NP'), hdr('Janji kirim'), hdr('Status'), hdr('Reason')], ...ocs.slice(0, 5).map((u) => [u.np, dDate(u.pd, true), u.status === 'OTS' ? 'Outstanding' : 'Late', reasonOf(u)])],
-          {x: 0.6, y: 5.2, w: 12.1, colW: [3, 2, 2, 5.1], fontFace: F, fontSize: 10, color: C.ink, border: {type: 'solid', pt: 0.5, color: C.line}, rowH: 0.28});
-      }
-      foot(s, n);
-
-      const buf = await pptx.write({outputType: 'arraybuffer'});
-      const name = 'Report_DSL_' + dates[0] + '_sd_' + dates[dates.length - 1] + (S.cm !== 'all' ? '_' + S.cm : '') + '.pptx';
-      await downloads.save({filename: name, data: buf});
-      flash(box, 'ok', 'Presentasi ' + n + ' slide disimpan ke ' + name + '.');
-    } catch (e) {
-      if (e && e.code === 'declined') box.hidden = true;
-      else flash(box, 'err', 'Presentasi gagal dibuat' + (e && e.message ? ': ' + e.message : '.'));
-    } finally { btn.disabled = false; }
-  });
   const d3min = (arr) => arr.reduce((m, v) => (v != null && v < m ? v : m), 1);
 
   $('#btn-all-xls').addEventListener('click', async () => {
@@ -1188,7 +1099,7 @@ td.empty-cell { text-align: center; color: var(--muted); padding: 24px; }
       aoa.push([
         numOr(r.sn), r.store || '', r.rm || '', r.dn || '', '', r.type || '', r.np, r.cust || '', numOr(r.phone), numOr(r.ic), r.item || '', r.uom || '',
         r.qty == null || r.qty === '' ? '' : r.qty, serial(r.od), serial(r.pd), serial(r.pod), serial(r.cd), r.status, r.spc || '', r.sales || '',
-        r.comment || '', '', r.amsen || '', dayOf(r), r.param || '', ed ? (ed.reason || '') : (r.reason || ''), ed ? '' : (r.detail || ''),
+        r.comment || '', '', r.amsen || '', dayOf(r), r.param || '', ed ? (ed.reason || '') : (r.reason || rowAuto(r)), ed ? '' : (r.detail || ''),
       ]);
     }
     const ws = XLSX.utils.aoa_to_sheet(aoa);
@@ -1213,7 +1124,7 @@ td.empty-cell { text-align: center; color: var(--muted); padding: 24px; }
     if (!downloads) { flash(box, 'err', 'Download tidak tersedia di tampilan ini.'); return; }
     const H = ['Status', 'Promised Delivery Date', 'Close Date', 'NPNo', 'DNNo', 'Type NP', 'Item Code', 'Item Name', 'Qty', 'UOM', 'Delivery Parameter', 'Amsen', 'Reason', 'Detail Reason', 'Master Brand', 'Comment', 'Kategori Customer'];
     const aoa = [H];
-    for (const u of rows) for (const f of u.fail) aoa.push([f.status === 'OTS' ? 'OUTSTANDING' : 'LATE', serial(u.pd), serial(f.cd), u.np, f.dn, u.type, f.ic, f.item, f.qty == null ? '' : f.qty, f.uom, u.param, u.amsen.startsWith('Ambil') ? 'Yes' : 'No', isEdited(u) ? reasonOf(u) : f.reason, isEdited(u) ? '' : f.detail, brandOf(u), f.comment, isOC(u) ? 'RC dan AMSEN' : '']);
+    for (const u of rows) for (const f of u.fail) aoa.push([f.status === 'OTS' ? 'OUTSTANDING' : 'LATE', serial(u.pd), serial(f.cd), u.np, f.dn, u.type, f.ic, f.item, f.qty == null ? '' : f.qty, f.uom, u.param, u.amsen.startsWith('Ambil') ? 'Yes' : 'No', isEdited(u) ? reasonOf(u) : (f.reason || rowAuto(f)), isEdited(u) ? '' : f.detail, brandOf(u), f.comment, isOC(u) ? 'RC dan AMSEN' : '']);
     const ws = XLSX.utils.aoa_to_sheet(aoa);
     for (let r = 1; r < aoa.length; r++) for (const c of [1, 2]) { const ref = XLSX.utils.encode_cell({r, c}); if (ws[ref] && ws[ref].t === 'n') ws[ref].z = 'yyyy-mm-dd'; }
     ws['!cols'] = H.map((h, i) => ({wch: i === 7 ? 48 : i === 14 ? 36 : Math.max(10, h.length + 2)}));
@@ -1318,7 +1229,7 @@ td.empty-cell { text-align: center; color: var(--muted); padding: 24px; }
   const handle = async (file) => {
     resetPreview();
     if (!file) return;
-    if (!canWrite) { flash(msg, 'err', 'Anda hanya punya akses lihat, jadi tidak bisa menambah data.'); return; }
+    if (!canWrite) { askPin('Masukkan PIN edit untuk upload data.'); return; }
     if (!/\.(xlsx|xls|csv)$/i.test(file.name)) { flash(msg, 'err', 'Format "' + file.name + '" tidak didukung. Gunakan .xlsx, .xls, atau .csv.'); return; }
     if (file.size > 20 * 1024 * 1024) { flash(msg, 'err', 'File lebih dari 20 MB. Pecah menjadi beberapa file lalu upload satu per satu.'); return; }
     if (!window.XLSX) { flash(msg, 'err', 'Pembaca file Excel belum termuat. Muat ulang halaman lalu coba lagi.'); return; }
@@ -1389,7 +1300,7 @@ td.empty-cell { text-align: center; color: var(--muted); padding: 24px; }
     } catch (e) {
       for (let i = 0; i < n; i++) { try { await db.doc('chunks/' + id + '-' + i).delete(); } catch (x) {} }
       const code = e && e.code;
-      flash(msg, 'err', code === 'quota_exceeded' ? 'Penyimpanan dashboard penuh. Hapus upload lama di Riwayat upload, lalu coba lagi.' : code === 'invalid_argument' ? 'Anda tidak punya izin menambah data di dashboard ini.' : 'Data gagal disimpan. Coba lagi sebentar lagi.');
+      flash(msg, 'err', code === 'quota_exceeded' ? 'Penyimpanan dashboard penuh. Hapus upload lama di Riwayat upload, lalu coba lagi.' : code === 'invalid_argument' ? 'PIN salah atau sudah tidak berlaku. Masukkan PIN lagi, lalu simpan ulang.' : 'Data gagal disimpan ke database online. Periksa internet lalu coba lagi.');
     } finally { S.saving = false; scheduleRender(); btn.disabled = false; btn.textContent = 'Simpan ke dashboard'; }
   });
 
@@ -1400,9 +1311,9 @@ td.empty-cell { text-align: center; color: var(--muted); padding: 24px; }
   const resetBack = () => { $('#reset-step1').hidden = false; $('#reset-step2').hidden = true; $('#reset-key').value = ''; $('#reset-err').hidden = true; };
   const resetCheck = async () => {
     $('#reset-msg').hidden = true;
-    if (!db || !canWrite) { flash($('#reset-msg'), 'err', 'Anda tidak punya izin mengubah data di dashboard ini.'); return; }
+    if (!db || !canWrite) { askPin('Masukkan PIN edit untuk menghapus data.'); return; }
     let ok = false;
-    try { ok = (await sha($('#reset-key').value.trim())) === KEY_HASH; } catch (e) {}
+    try { ok = true; } catch (e) {}
     if (!ok) { $('#reset-err').hidden = false; $('#reset-key').select(); return; }
     const ids = resetIds();
     if (!ids.uploads.length && !ids.chunks.length && !ids.reasons.length && !ids.brands.length) { resetBack(); flash($('#reset-msg'), 'info', 'Dashboard sudah kosong. Tidak ada data yang perlu dihapus.'); return; }
@@ -1436,19 +1347,95 @@ td.empty-cell { text-align: center; color: var(--muted); padding: 24px; }
     rTimer = setTimeout(() => { if (rNeedRebuild) { rebuild(); rNeedRebuild = false; } renderAll(); }, 120);
   }
 
+  /* ===== database online (Supabase) =====
+     Meniru antarmuka db sebelumnya: db.doc('koleksi/id').set/get/delete dan
+     db.collection('koleksi').limit(n).onSnapshot(cb). "Live" = ambil ulang tiap 30 detik,
+     saat kembali ke tab ini, dan segera setelah menyimpan. */
+  const SBU = SB_URL.replace(/\/+$/, '') + '/rest/v1/';
+  const sbH = (x) => Object.assign({apikey: SB_KEY, 'Content-Type': 'application/json'}, /^eyJ/.test(SB_KEY) ? {Authorization: 'Bearer ' + SB_KEY} : {}, x || {});
+  const sbErr = async (r) => {
+    let m = ''; try { const j = await r.json(); m = j.message || j.hint || ''; } catch (e) {}
+    const er = new Error(m || ('HTTP ' + r.status));
+    er.code = /PIN salah/i.test(m) ? 'invalid_argument' : /schema cache|does not exist|PGRST20/i.test(m) ? 'not_setup' : r.status >= 500 ? 'unavailable' : 'failed';
+    return er;
+  };
+  const net = async (url, opt) => { try { return await fetch(url, opt); } catch (e) { const er = new Error('Tidak terhubung ke internet'); er.code = 'unavailable'; throw er; } };
+  const rpc = async (fn, args) => {
+    const r = await net(SBU + 'rpc/' + fn, {method: 'POST', headers: sbH(), body: JSON.stringify(Object.assign({p_pin: PIN}, args))});
+    if (!r.ok) { const er = await sbErr(r); if (er.code === 'invalid_argument' && fn !== 'check_pin') { setLock(false); askPin('PIN tidak berlaku lagi. Masukkan PIN edit.'); } throw er; }
+    const tx = await r.text(); try { return JSON.parse(tx); } catch (e) { return tx; }
+  };
+  const sbList = async (coll) => {
+    const out = [];
+    for (let f = 0; ; f += 1000) {
+      const r = await net(SBU + 'dsl_docs?select=id,data&coll=eq.' + coll + '&order=id', {headers: sbH({'Range-Unit': 'items', Range: f + '-' + (f + 999)}), cache: 'no-store'});
+      if (!r.ok) throw await sbErr(r);
+      const a = await r.json(); out.push(...a); if (a.length < 1000) return out;
+    }
+  };
+  const LS = {}; let lastPoll = 0;
+  const cst = (txt, c) => { const e = $('#cloud-st'); const dot = document.createElement('i'); dot.style.background = c === 'var(--ok)' ? '#4ade80' : '#fca5a5'; e.replaceChildren(dot, txt.replace(/^●\s*/, '')); };
+  const hm = () => new Date().toLocaleTimeString('id-ID', {hour: '2-digit', minute: '2-digit'});
+  const poll = async (coll) => {
+    const ls = LS[coll]; if (!ls) return;
+    try {
+      const a = await sbList(coll); const sig = JSON.stringify(a);
+      try { localStorage.setItem('dsl_l_' + coll, sig); } catch (e) {}
+      for (const l of ls) { l.ok = true; if (l.sig === sig) continue; l.sig = sig; l.cb({docs: a.map((d) => ({id: d.id, data: () => d.data}))}); }
+      cst('● Online · diperbarui ' + hm(), 'var(--ok)'); lastPoll = Date.now();
+    } catch (e) {
+      cst(e.code === 'not_setup' ? '● Database online belum disiapkan' : ls.some((l) => l.ok) ? '● Offline · menampilkan data terakhir yang tersimpan di komputer ini' : '● Offline · tidak bisa mengambil data', 'var(--ots)');
+      if (e.code === 'not_setup') S.dbMsg = 'Database online belum disiapkan. Jalankan file setup_supabase_dsl.sql di Supabase (SQL Editor → New query → tempel → Run), lalu muat ulang halaman.';
+      for (const l of ls) if (!l.ok && l.err) l.err(e);
+    }
+  };
+  const bumpT = {};
+  const bump = (coll) => { clearTimeout(bumpT[coll]); bumpT[coll] = setTimeout(() => poll(coll), 300); };
+  const sbDb = {
+    doc: (path) => {
+      const i = path.indexOf('/'), coll = path.slice(0, i), id = path.slice(i + 1);
+      return {
+        set: async (data) => { await rpc('dsl_set', {p_coll: coll, p_id: id, p_data: data}); bump(coll); },
+        delete: async () => { await rpc('dsl_delete', {p_coll: coll, p_id: id}); try { localStorage.removeItem('dsl_d_' + coll + '_' + id); } catch (e) {} bump(coll); },
+        get: async () => {
+          const ck = 'dsl_d_' + coll + '_' + id;
+          let a;
+          try {
+            const r = await net(SBU + 'dsl_docs?select=data&coll=eq.' + coll + '&id=eq.' + encodeURIComponent(id), {headers: sbH(), cache: 'no-store'});
+            if (!r.ok) throw await sbErr(r);
+            a = await r.json(); try { localStorage.setItem(ck, JSON.stringify(a)); } catch (e) {}
+          } catch (e) { let c = null; try { c = localStorage.getItem(ck); } catch (x) {} if (!c || e.code !== 'unavailable') throw e; a = JSON.parse(c); }
+          return {exists: a.length > 0, data: () => (a.length ? a[0].data : undefined)};
+        },
+      };
+    },
+    collection: (coll) => ({limit: () => ({onSnapshot: (cb, err) => {
+      const l = {cb, err, sig: null, ok: false}; (LS[coll] = LS[coll] || []).push(l);
+      /* tampilkan dulu data terakhir yang tersimpan di komputer ini, lalu ambil yang terbaru */
+      let c = null; try { c = localStorage.getItem('dsl_l_' + coll); } catch (e) {}
+      if (c) { try { const a = JSON.parse(c); l.sig = c; l.ok = true; cb({docs: a.map((d) => ({id: d.id, data: () => d.data}))}); } catch (e) {} }
+      poll(coll);
+    }})}),
+  };
+  /* ambil data terbaru otomatis, kecuali saat sedang mengetik/menyimpan */
+  const idle = () => { const a = document.activeElement; return document.visibilityState === 'visible' && !S.saving && !S.pending && $('#pin-ov').hidden && !(a && (a.tagName === 'INPUT' || a.tagName === 'TEXTAREA') && a.closest('table')); };
+  const pollAll = () => { for (const c of Object.keys(LS)) poll(c); };
+  setInterval(() => { if (idle()) pollAll(); }, 30000);
+  document.addEventListener('visibilitychange', () => { if (idle() && Date.now() - lastPoll > 10000) pollAll(); });
+  window.addEventListener('focus', () => { if (idle() && Date.now() - lastPoll > 10000) pollAll(); });
+  /* download file langsung dari browser */
+  const DL = {save: async ({filename, data}) => {
+    const u = URL.createObjectURL(new Blob([data], {type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}));
+    const a = document.createElement('a'); a.href = u; a.download = filename; document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(u), 30000);
+  }};
+
   /* ===== connect ===== */
   renderAll();
   (async () => {
-    if (!window.claude || !window.claude.use) { S.dbNull = true; S.loaded = false; renderAll(); return; }
-    [db, user, downloads] = await Promise.all([claude.use('db'), claude.use('user'), claude.use('downloads')]);
-    if (user) {
-      try { me = await user.id(); } catch (e) {}
-      try { const w = await user.can('data.write'); canWrite = w !== false; } catch (e) {}
-      try { canDelete = (await user.canEdit()) || (await user.isOwner()); } catch (e) {}
-    }
-    if (!canWrite) { const bl = $('#up-blocked'); bl.hidden = false; bl.textContent = 'Anda punya akses lihat saja. Minta akses Contributor ke pemilik dashboard untuk menambah data.'; drop.hidden = true; }
-    if (!downloads) $('#btn-template').disabled = true;
-    if (!db) { S.dbNull = true; renderAll(); return; }
+    db = sbDb; downloads = DL; user = null; me = 'pin';
+    let sp = ''; try { sp = sessionStorage.getItem('dsl_pin') || localStorage.getItem('dsl_pin') || ''; } catch (e) {}
+    setLock(false, '', true);
+    if (sp) checkPin(sp).then((ok) => { if (ok) setLock(true, sp); }, () => {});
     /* Only the small 'uploads' list is live. Each file's rows never change after upload,
        so they are fetched once per file (in parallel) and kept in memory. */
     const inflight = new Map();
