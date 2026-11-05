@@ -698,7 +698,7 @@ var SB_KEY = "sb_publishable_KiSRfZUjVh1jW2kai0O0_Q_ZWn4oXT_";
     const card = $('#pm-card'); if (!card) return;
     const all = count(us), g = groups(us, 'param');
     const head = el('div', {}, el('h2', {textContent: 'Kontribusi Delivery Parameter terhadap pengiriman ALL'}),
-      el('p', {class: 'note', textContent: 'Porsi Sameday, Next Day, 2 Days, dan Up 2 Days dari seluruh NP (ALL), kontribusinya ke NP Late (Late + Outstanding), dan berapa poin DSL ALL yang hilang karena parameter tersebut. Mengikuti filter tanggal dan Comment di atas.'}));
+      el('p', {class: 'note', textContent: 'Porsi Sameday, Next Day, 2 Days, dan Up 2 Days dari seluruh NP (ALL), dan kontribusinya ke NP Late (Late + Outstanding). Mengikuti filter tanggal dan Comment di atas.'}));
     if (!all.total) { card.replaceChildren(head, el('div', {class: 'empty', textContent: 'Tidak ada data.'})); return; }
     const stack = (lbl, sub, val, tot) => {
       const bar = el('div', {class: 'pm-bar', role: 'img', 'aria-label': lbl});
@@ -724,7 +724,7 @@ var SB_KEY = "sb_publishable_KiSRfZUjVh1jW2kai0O0_Q_ZWn4oXT_";
     if (below.length) ins.push(el('li', {}, 'DSL di bawah DSL ALL (', b(pct(all.dsl)), '): ', ...below.flatMap((x, i) => [i ? ', ' : '', b(x.key), ' ' + pct(x.dsl)]), '.'));
     else if (all.miss) ins.push(el('li', {}, 'Semua parameter punya DSL sama atau di atas DSL ALL (', b(pct(all.dsl)), ').'));
     /* tabel */
-    const th = ['Delivery Parameter', 'Total NP', 'Porsi dari ALL', 'Tercapai', 'Late', 'Outstanding', 'Kontribusi ke NP Late ALL', 'DSL', 'vs DSL ALL', 'Poin DSL ALL hilang'];
+    const th = ['Delivery Parameter', 'Total NP', 'Porsi dari ALL', 'Tercapai', 'Late', 'Outstanding', 'Kontribusi ke NP Late ALL', 'DSL'];
     const tr = (r, foot) => el('tr', {},
       el('td', {class: 'nw'}, foot ? el('b', {textContent: 'ALL'}) : el('span', {}, el('i', {style: 'display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:7px;background:' + (PCOL[r.key] || '#c9d2de')}), r.key)),
       el('td', {class: 'num', textContent: int(r.total)}),
@@ -733,16 +733,14 @@ var SB_KEY = "sb_publishable_KiSRfZUjVh1jW2kai0O0_Q_ZWn4oXT_";
       el('td', {class: 'num', textContent: int(r.late)}),
       el('td', {class: 'num', textContent: int(r.ots)}),
       el('td', {class: 'num', textContent: all.miss ? pct(r.miss / all.miss) : '—'}),
-      el('td', {class: 'num', textContent: pct(r.dsl)}),
-      foot ? el('td', {class: 'num', textContent: '—'}) : el('td', {class: 'num ' + (r.dsl > all.dsl + 1e-9 ? 'pos' : r.dsl < all.dsl - 1e-9 ? 'neg' : ''), textContent: pts(r.dsl - all.dsl)}),
-      el('td', {class: 'num ' + (r.miss ? 'neg' : ''), textContent: r.miss ? '−' + (r.miss / all.total * 100).toFixed(1).replace('.', ',') + ' poin' : '0'}));
+      el('td', {class: 'num', textContent: pct(r.dsl)}));
     const tbl = el('table', {class: 'oc-t pm-t'},
       el('thead', {}, el('tr', {}, ...th.map((h) => el('th', {textContent: h})))),
       el('tbody', {}, ...g.map((r) => tr(r))),
       el('tfoot', {}, tr({key: 'ALL', ...all}, true)));
     card.replaceChildren(head, el('ul', {class: 'pm-ins'}, ...ins), bars, leg,
       el('div', {class: 'tablewrap', style: 'max-height:none;margin-top:12px'}, tbl),
-      el('p', {class: 'note', style: 'margin-top:8px', textContent: 'Kontribusi ke NP Late ALL = NP Late + Outstanding parameter ÷ total NP Late + Outstanding ALL. Poin DSL ALL hilang = NP Late + Outstanding parameter ÷ total NP ALL; jumlah semua baris = 100% − DSL ALL.'}));
+      el('p', {class: 'note', style: 'margin-top:8px', textContent: 'Kontribusi ke NP Late ALL = NP Late + Outstanding parameter ÷ total NP Late + Outstanding ALL.'}));
   };
 
   const reasonCell = (u) => {
