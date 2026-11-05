@@ -53,6 +53,22 @@ h1 { margin: 2px 0 0; font-family: var(--f-num); font-weight: 400; font-size: cl
 .pinov[hidden] { display: none; }
 .pindlg { max-width: 380px; width: 100%; display: flex; flex-direction: column; gap: 10px; }
 .pindlg input[type=password] { padding: 9px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); color: inherit; font: inherit; }
+.pm-bars { display: flex; flex-direction: column; gap: 10px; margin-top: 4px; }
+.pm-row { display: grid; grid-template-columns: 150px 1fr; gap: 12px; align-items: center; }
+.pm-l { font-size: 13px; font-weight: 600; }
+.pm-l small { display: block; font-weight: 500; color: var(--muted); font-size: 11.5px; }
+.pm-bar { display: flex; height: 28px; border-radius: 7px; overflow: hidden; background: var(--grid); }
+.pm-bar span { display: flex; align-items: center; justify-content: center; font-size: 11.5px; font-weight: 700; white-space: nowrap; overflow: hidden; min-width: 2px; }
+.pm-leg { display: flex; flex-wrap: wrap; gap: 14px; font-size: 12.5px; margin-top: 10px; }
+.pm-leg i { display: inline-block; width: 11px; height: 11px; border-radius: 3px; margin-right: 6px; vertical-align: -1px; }
+.pm-ins { margin: 4px 0 0; padding-left: 18px; display: grid; gap: 5px; font-size: 13.5px; }
+.pm-t td.pos { color: var(--ok); font-weight: 700; } .pm-t td.neg { color: var(--ots); font-weight: 700; }
+.pm-t tfoot td { font-weight: 700; border-top: 2px solid var(--line); }
+@media (max-width: 700px) { .pm-row { grid-template-columns: 1fr; gap: 4px; } }
+.capbtn { margin-left: auto; flex: none; appearance: none; display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--line); background: var(--panel); color: var(--fg); border-radius: 9px; padding: 8px 12px; font: 600 13px inherit; font-family: inherit; cursor: pointer; white-space: nowrap; }
+.capbtn:hover { border-color: var(--accent); color: var(--accent); }
+.capbtn:disabled { opacity: .55; cursor: progress; }
+.capval { font-weight: 600; }
 .pindlg .rbtns { display: flex; justify-content: flex-end; gap: 8px; }
 .fsep { width: 1px; align-self: stretch; background: var(--line); margin: 0 4px; }
 .fgroup { display: flex; flex-direction: column; gap: 3px; }
@@ -252,6 +268,7 @@ td.empty-cell { text-align: center; color: var(--muted); padding: 24px; }
     <button class="tab" role="tab" id="tab-gagal" data-tab="gagal" aria-selected="false">NP Late &amp; Outstanding <span class="badge num" id="badge-miss">0</span></button>
     <button class="tab" role="tab" id="tab-semua" data-tab="semua" aria-selected="false">All Data Pengiriman</button>
     <button class="tab" role="tab" id="tab-upload" data-tab="upload" aria-selected="false">Data &amp; Upload</button>
+    <button class="capbtn" id="cap-btn" type="button" title="Unduh gambar PNG dari seluruh isi tab yang sedang dibuka"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>Capture gambar</button>
   </nav>
 
   <!-- TAB 1 -->
@@ -269,6 +286,7 @@ td.empty-cell { text-align: center; color: var(--muted); padding: 24px; }
       <section class="card" id="oc-card"></section>
       <section class="card" id="wk-card"></section>
       <section class="card" id="rb-card"></section>
+      <section class="card" id="pm-card"></section>
       <section class="card">
         <div><h2>DSL per hari</h2><p class="note">Satu baris = satu tanggal janji kirim. Panjang warna = porsi NP per status.</p></div>
         <div class="legend">
@@ -618,7 +636,7 @@ var SB_KEY = "sb_publishable_KiSRfZUjVh1jW2kai0O0_Q_ZWn4oXT_";
     const li = (cls, sym, ...kids) => el('li', {}, el('span', {class: 'ico ' + cls, textContent: sym}), el('span', {}, ...kids));
     $('#points').replaceChildren(
       li('ok', '✓', b(int(c.ok)), ' dari ', b(int(c.total)), ' NP terkirim tepat waktu atau lebih cepat dari janji.'),
-      c.miss ? li('bad', '!', b(int(c.miss)), ' NP gagal memenuhi janji: ', b(int(c.late)), ' terlambat dan ', b(int(c.ots)), ' belum terkirim.') : li('ok', '✓', 'Tidak ada NP yang terlambat atau outstanding.'),
+      c.miss ? li('bad', '!', b(int(c.miss)), ' NP Late (tidak memenuhi janji): ', b(int(c.late)), ' terlambat dan ', b(int(c.ots)), ' belum terkirim.') : li('ok', '✓', 'Tidak ada NP yang terlambat atau outstanding.'),
       li('cust', 'C', 'DSL Customer: ', b(pct(c.dslCust)), ...(c.oc ? [' (', b(int(c.oc)), ' NP Late/Outstanding masuk kategori RC dan AMSEN).'] : [' (belum ada NP dengan Reason Reschedule Customer atau Amsen).'])),
       li('warn', '↓', 'Hari terendah: ', b(dDay(wd.key)), ' dengan DSL ', b(pct(wd.dsl)), '.'),
       li('warn', '↓', 'Tipe NP terendah: ', b(wt.key), ' dengan DSL ', b(pct(wt.dsl)), '.'),
@@ -650,6 +668,7 @@ var SB_KEY = "sb_publishable_KiSRfZUjVh1jW2kai0O0_Q_ZWn4oXT_";
       el('div', {class: 'tablewrap', style: 'max-height:none'}, tbl),
     );
     renderWeekly(us);
+    renderParam(us);
     renderReasonBrand(us);
     for (const box of $$('.rows[data-dim]')) {
       const g = groups(us, box.dataset.dim);
@@ -664,11 +683,66 @@ var SB_KEY = "sb_publishable_KiSRfZUjVh1jW2kai0O0_Q_ZWn4oXT_";
         const v = el('div', {class: 'r-v num', textContent: pct(r.dsl)});
         if (low) v.append(el('small', {textContent: '▼ rendah'}));
         box.append(el('div', {class: 'r' + (low ? ' low' : '')},
-          el('div', {class: 'r-name'}, label, el('small', {class: 'num', textContent: int(r.total) + ' NP · ' + (r.miss ? int(r.miss) + ' gagal' : 'semua tercapai')})),
+          el('div', {class: 'r-name'}, label, el('small', {class: 'num', textContent: int(r.total) + ' NP · ' + (r.miss ? int(r.miss) + ' Late' : 'semua tercapai')})),
           bar, v));
       }
       if (!g.length) box.append(el('div', {class: 'empty', textContent: 'Tidak ada data.'}));
     }
+  };
+
+  /* ===== Kontribusi Delivery Parameter terhadap pengiriman ALL ===== */
+  const PCOL = {'Sameday': '#0b3d91', 'Next Day': '#1f6fe0', '2 Days': '#6fa8f6', 'Up 2 Days': '#bcd6fb', 'Tidak diketahui': '#c9d2de'};
+  const PINK = {'Sameday': '#fff', 'Next Day': '#fff', '2 Days': '#0e2546', 'Up 2 Days': '#0e2546', 'Tidak diketahui': '#0e2546'};
+  const pts = (v) => (v == null || isNaN(v) ? '—' : (v >= 0 ? '+' : '') + (v * 100).toFixed(1).replace('.', ',') + ' poin');
+  const renderParam = (us) => {
+    const card = $('#pm-card'); if (!card) return;
+    const all = count(us), g = groups(us, 'param');
+    const head = el('div', {}, el('h2', {textContent: 'Kontribusi Delivery Parameter terhadap pengiriman ALL'}),
+      el('p', {class: 'note', textContent: 'Porsi Sameday, Next Day, 2 Days, dan Up 2 Days dari seluruh NP (ALL), kontribusinya ke NP Late (Late + Outstanding), dan berapa poin DSL ALL yang hilang karena parameter tersebut. Mengikuti filter tanggal dan Comment di atas.'}));
+    if (!all.total) { card.replaceChildren(head, el('div', {class: 'empty', textContent: 'Tidak ada data.'})); return; }
+    const stack = (lbl, sub, val, tot) => {
+      const bar = el('div', {class: 'pm-bar', role: 'img', 'aria-label': lbl});
+      if (!tot) bar.append(el('span', {style: 'width:100%;color:var(--muted);font-weight:600', textContent: 'Tidak ada NP Late'}));
+      else for (const r of g) {
+        const v = val(r); if (!v) continue; const w = v / tot * 100;
+        bar.append(el('span', {style: 'width:' + w + '%;background:' + (PCOL[r.key] || '#c9d2de') + ';color:' + (PINK[r.key] || '#0e2546'), title: r.key + ': ' + int(v) + ' NP (' + pct(v / tot) + ')', textContent: w >= 8 ? pct(v / tot) : ''}));
+      }
+      return el('div', {class: 'pm-row'}, el('div', {class: 'pm-l'}, lbl, el('small', {textContent: sub})), bar);
+    };
+    const bars = el('div', {class: 'pm-bars'},
+      stack('Porsi dari ALL', int(all.total) + ' NP', (r) => r.total, all.total),
+      stack('Porsi dari NP Late', int(all.miss) + ' NP Late + Outstanding', (r) => r.miss, all.miss),
+      stack('Porsi dari NP tercapai', int(all.ok) + ' NP On time + Early', (r) => r.ok, all.ok));
+    const leg = el('div', {class: 'pm-leg'}, ...g.map((r) => el('span', {}, el('i', {style: 'background:' + (PCOL[r.key] || '#c9d2de')}), r.key)));
+    /* temuan utama */
+    const top = g.reduce((w, x) => (!w || x.total > w.total ? x : w), null);
+    const tl = g.filter((x) => x.miss).reduce((w, x) => (!w || x.miss > w.miss ? x : w), null);
+    const below = g.filter((x) => x.dsl != null && all.dsl != null && x.dsl < all.dsl - 1e-9);
+    const ins = [el('li', {}, 'Volume terbesar: ', b(top.key), ' dengan ', b(int(top.total) + ' NP'), ' (', b(pct(top.total / all.total)), ' dari ALL).')];
+    if (tl) ins.push(el('li', {}, 'Penyumbang NP Late terbesar: ', b(tl.key), ', ', b(int(tl.miss)), ' dari ', b(int(all.miss)), ' NP Late (', b(pct(tl.miss / all.miss)), '), mengurangi DSL ALL sebesar ', b((tl.miss / all.total * 100).toFixed(1).replace('.', ',') + ' poin'), '.'));
+    else ins.push(el('li', {}, 'Tidak ada NP Late pada filter ini. Semua parameter tercapai.'));
+    if (below.length) ins.push(el('li', {}, 'DSL di bawah DSL ALL (', b(pct(all.dsl)), '): ', ...below.flatMap((x, i) => [i ? ', ' : '', b(x.key), ' ' + pct(x.dsl)]), '.'));
+    else if (all.miss) ins.push(el('li', {}, 'Semua parameter punya DSL sama atau di atas DSL ALL (', b(pct(all.dsl)), ').'));
+    /* tabel */
+    const th = ['Delivery Parameter', 'Total NP', 'Porsi dari ALL', 'Tercapai', 'Late', 'Outstanding', 'Kontribusi ke NP Late ALL', 'DSL', 'vs DSL ALL', 'Poin DSL ALL hilang'];
+    const tr = (r, foot) => el('tr', {},
+      el('td', {class: 'nw'}, foot ? el('b', {textContent: 'ALL'}) : el('span', {}, el('i', {style: 'display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:7px;background:' + (PCOL[r.key] || '#c9d2de')}), r.key)),
+      el('td', {class: 'num', textContent: int(r.total)}),
+      el('td', {class: 'num', textContent: pct(r.total / all.total)}),
+      el('td', {class: 'num', textContent: int(r.ok)}),
+      el('td', {class: 'num', textContent: int(r.late)}),
+      el('td', {class: 'num', textContent: int(r.ots)}),
+      el('td', {class: 'num', textContent: all.miss ? pct(r.miss / all.miss) : '—'}),
+      el('td', {class: 'num', textContent: pct(r.dsl)}),
+      foot ? el('td', {class: 'num', textContent: '—'}) : el('td', {class: 'num ' + (r.dsl > all.dsl + 1e-9 ? 'pos' : r.dsl < all.dsl - 1e-9 ? 'neg' : ''), textContent: pts(r.dsl - all.dsl)}),
+      el('td', {class: 'num ' + (r.miss ? 'neg' : ''), textContent: r.miss ? '−' + (r.miss / all.total * 100).toFixed(1).replace('.', ',') + ' poin' : '0'}));
+    const tbl = el('table', {class: 'oc-t pm-t'},
+      el('thead', {}, el('tr', {}, ...th.map((h) => el('th', {textContent: h})))),
+      el('tbody', {}, ...g.map((r) => tr(r))),
+      el('tfoot', {}, tr({key: 'ALL', ...all}, true)));
+    card.replaceChildren(head, el('ul', {class: 'pm-ins'}, ...ins), bars, leg,
+      el('div', {class: 'tablewrap', style: 'max-height:none;margin-top:12px'}, tbl),
+      el('p', {class: 'note', style: 'margin-top:8px', textContent: 'Kontribusi ke NP Late ALL = NP Late + Outstanding parameter ÷ total NP Late + Outstanding ALL. Poin DSL ALL hilang = NP Late + Outstanding parameter ÷ total NP ALL; jumlah semua baris = 100% − DSL ALL.'}));
   };
 
   const reasonCell = (u) => {
@@ -779,7 +853,7 @@ var SB_KEY = "sb_publishable_KiSRfZUjVh1jW2kai0O0_Q_ZWn4oXT_";
       bar.addEventListener('pointerleave', () => { tip.hidden = true; });
       const v = el('div', {class: 'r-v num', textContent: pct(r.dsl)});
       v.append(el('small', {style: 'color:var(--accent)', textContent: 'Cust ' + pct(r.dslCust)}));
-      bars.append(el('div', {class: 'r'}, el('div', {class: 'r-name'}, weekLabel(r.key), el('small', {class: 'num', textContent: int(r.total) + ' NP · ' + (r.miss ? int(r.miss) + ' gagal' : 'semua tercapai')})), bar, v));
+      bars.append(el('div', {class: 'r'}, el('div', {class: 'r-name'}, weekLabel(r.key), el('small', {class: 'num', textContent: int(r.total) + ' NP · ' + (r.miss ? int(r.miss) + ' Late' : 'semua tercapai')})), bar, v));
     }
     card.replaceChildren(
       el('div', {}, el('h2', {textContent: 'Analisa Kiriman per Minggu'}), el('p', {class: 'note', textContent: 'Dikelompokkan per minggu tanggal janji kirim, dari hari Minggu sampai Sabtu. DSL Customer menghitung RC dan AMSEN sebagai tercapai.'})),
@@ -793,7 +867,7 @@ var SB_KEY = "sb_publishable_KiSRfZUjVh1jW2kai0O0_Q_ZWn4oXT_";
     const gr = failGroups(fails, reasonKey), gb = failGroups(fails, brandOf);
     const lr = el('div', {class: 'rows'}), lb = el('div', {class: 'rows'});
     const head = el('div', {}, el('h2', {textContent: 'Analisa Late & Outstanding per Reason dan Master Brand'}),
-      el('p', {class: 'note', textContent: int(fails.length) + ' NP Late/Outstanding pada filter ini, tanpa RC dan AMSEN' + (ocN ? ' (' + int(ocN) + ' NP dikeluarkan)' : '') + '. Angka = jumlah NP, persentase = porsi dari total NP gagal. Reason dan Master Brand bisa diisi di tab NP Late & Outstanding.'}));
+      el('p', {class: 'note', textContent: int(fails.length) + ' NP Late/Outstanding pada filter ini, tanpa RC dan AMSEN' + (ocN ? ' (' + int(ocN) + ' NP dikeluarkan)' : '') + '. Angka = jumlah NP, persentase = porsi dari total NP Late. Reason dan Master Brand bisa diisi di tab NP Late & Outstanding.'}));
     const legend = el('div', {class: 'legend'}, el('span', {}, el('i', {class: 'sw', style: 'background:var(--late)'}), 'Late'), el('span', {}, el('i', {class: 'sw', style: 'background:var(--ots)'}), 'Outstanding'));
     const cols = el('div', {class: 'grid2', style: 'gap:28px'},
       el('div', {}, el('h3', {class: 'h3', textContent: 'Per Reason'}), lr),
@@ -1424,10 +1498,87 @@ var SB_KEY = "sb_publishable_KiSRfZUjVh1jW2kai0O0_Q_ZWn4oXT_";
   document.addEventListener('visibilitychange', () => { if (idle() && Date.now() - lastPoll > 10000) pollAll(); });
   window.addEventListener('focus', () => { if (idle() && Date.now() - lastPoll > 10000) pollAll(); });
   /* download file langsung dari browser */
-  const DL = {save: async ({filename, data}) => {
-    const u = URL.createObjectURL(new Blob([data], {type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}));
+  const DL = {save: async ({filename, data, type}) => {
+    const u = URL.createObjectURL(new Blob([data], {type: type || 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}));
     const a = document.createElement('a'); a.href = u; a.download = filename; document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(u), 30000);
   }};
+
+  /* ===== capture gambar (PNG) per tab =====
+     Header + isi tab aktif disalin ke wadah lebar tetap di luar layar, tombol/kolom isian
+     diganti teks, tabel dibuka penuh (tanpa scroll), lalu dirender html2canvas. */
+  const TABNAME = {ringkasan: 'Ringkasan DSL', gagal: 'NP Late & Outstanding', semua: 'All Data Pengiriman', upload: 'Data & Upload'};
+  const loadH2C = () => window.html2canvas ? Promise.resolve() : new Promise((ok, no) => { const s = document.createElement('script'); s.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js'; s.onload = ok; s.onerror = () => no(new Error('pembuat gambar tidak bisa dimuat')); document.head.append(s); });
+  const fixSvg = (orig, clone) => {
+    const o = orig.querySelectorAll('svg'), c = clone.querySelectorAll('svg');
+    for (let i = 0; i < o.length && i < c.length; i++) {
+      const oe = [o[i], ...o[i].querySelectorAll('*')], ce = [c[i], ...c[i].querySelectorAll('*')];
+      for (let j = 0; j < oe.length && j < ce.length; j++) {
+        const s = getComputedStyle(oe[j]);
+        for (const pr of ['fill', 'stroke', 'stroke-width', 'stroke-dasharray', 'stroke-dashoffset', 'stroke-linecap', 'opacity']) { const v = s.getPropertyValue(pr); if (v) ce[j].setAttribute(pr, v); }
+      }
+      const r = o[i].getBoundingClientRect(); if (r.width) { c[i].setAttribute('width', Math.round(r.width)); c[i].setAttribute('height', Math.round(r.height)); }
+    }
+  };
+  const cleanClone = (orig, cl) => {
+    fixSvg(orig, cl);
+    /* bagian lipat (details): yang tertutup hanya judulnya, yang terbuka isinya; ubah jadi div biasa */
+    const od = orig.querySelectorAll('details'), cd = cl.querySelectorAll('details');
+    cd.forEach((d, i) => {
+      const open = od[i] && od[i].open, nd = el('div', {className: d.className});
+      for (const k of [...d.childNodes]) {
+        if (k.nodeType === 1 && k.tagName === 'SUMMARY') { const s = el('div', {className: k.className}); s.style.cssText = 'font-weight:700;list-style:none'; s.append(...k.childNodes); nd.append(s); }
+        else if (open) nd.append(k);
+      }
+      if (!open) nd.append(el('div', {className: 'note', textContent: '(bagian ini tertutup saat gambar dibuat)', style: 'margin-top:4px'}));
+      d.replaceWith(nd);
+    });
+    /* tanggal & pencarian: tampilkan nilainya sebagai teks */
+    const oi = orig.querySelectorAll('input'), ci = cl.querySelectorAll('input');
+    ci.forEach((inp, i) => {
+      const src = oi[i], ty = (inp.type || '').toLowerCase();
+      if (ty === 'date') { const sp = el('span', {class: 'capval', textContent: src && src.value ? dDate(src.value, true) : 'Semua'}); inp.replaceWith(sp); }
+      else if (ty === 'search' || ty === 'text') { if (src && src.value) inp.replaceWith(el('span', {class: 'capval', textContent: 'Cari: “' + src.value + '”'})); else inp.remove(); }
+      else inp.remove();
+    });
+    cl.querySelectorAll('.pinbtn, #pin-btn, .lockbar, .mini, #f-reset, #btn-xls, #btn-all-xls, #all-more, #btn-template, #btn-save, #btn-cancel, #reset, .drop, [hidden], .tip').forEach((n) => n.remove());
+    cl.querySelectorAll('.btn').forEach((b) => { if (!b.closest('.seg') && !b.classList.contains('chip')) b.remove(); });
+    cl.querySelectorAll('.tablewrap, .scroll').forEach((w) => { w.style.maxHeight = 'none'; w.style.overflow = 'visible'; });
+    cl.querySelectorAll('[id]').forEach((n) => n.removeAttribute('id'));
+  };
+  const capture = async () => {
+    const btn = $('#cap-btn'), page = $('#' + S.tab), head = $('.top');
+    if (!page) return;
+    btn.disabled = true; const old = btn.lastChild.textContent; btn.lastChild.textContent = 'Membuat gambar…';
+    let box = null;
+    try {
+      await loadH2C();
+      const W = S.tab === 'gagal' || S.tab === 'semua' ? 1500 : 1280;
+      const bg = getComputedStyle(document.body).backgroundColor;
+      box = el('div', {style: 'position:absolute;left:-30000px;top:0;width:' + W + 'px;padding:18px;display:flex;flex-direction:column;gap:14px;background:' + bg + ';color:' + getComputedStyle(document.body).color});
+      const h = head.cloneNode(true); cleanClone(head, h);
+      const pg = page.cloneNode(true); pg.hidden = false; cleanClone(page, pg);
+      const ds = S.rows.map((r) => r.pd).sort();
+      const per = (S.from || ds[0]) && (S.to || ds[ds.length - 1]) ? dDate(S.from || ds[0], true) + ' – ' + dDate(S.to || ds[ds.length - 1], true) : 'semua tanggal';
+      const cm = S.cm === 'kirim' ? 'Kirim' : S.cm === 'amsen' ? 'Amsen' : 'Semua';
+      const at = new Date();
+      const cap = el('div', {style: 'display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;font-size:13px;color:var(--muted);font-weight:600'},
+        el('span', {textContent: 'Tab: ' + TABNAME[S.tab] + ' · Periode janji kirim: ' + per + ' · Comment: ' + cm}),
+        el('span', {textContent: 'Dibuat ' + at.toLocaleString('id-ID')}));
+      box.append(h, cap, pg); document.body.append(box);
+      await new Promise((r) => setTimeout(r, 60));
+      const sc = Math.max(1, Math.min(2, 15000 / box.scrollHeight));
+      const cv = await html2canvas(box, {scale: sc, backgroundColor: bg, windowWidth: W + 60, windowHeight: box.scrollHeight + 40, height: box.scrollHeight, width: box.offsetWidth, useCORS: true, logging: false});
+      box.remove(); box = null;
+      const blob = await new Promise((r) => cv.toBlob(r, 'image/png'));
+      const fn = 'DSL_' + TABNAME[S.tab].replace(/[^A-Za-z0-9]+/g, '_').replace(/_+$/, '') + '_' + (S.from || ds[0] || '') + '_' + (S.to || ds[ds.length - 1] || '') + '.png';
+      await DL.save({filename: fn, data: await blob.arrayBuffer(), type: 'image/png'});
+    } catch (e) {
+      if (box) box.remove();
+      alertBox('Gagal membuat gambar (' + ((e && e.message) || 'error') + '). Silakan screenshot layar secara manual.');
+    } finally { btn.disabled = false; btn.lastChild.textContent = old; }
+  };
+  const alertBox = (txt) => { const m = el('div', {class: 'msg err', textContent: txt, style: 'margin:10px 0'}); $('.tabs').after(m); setTimeout(() => m.remove(), 8000); };
+  $('#cap-btn').addEventListener('click', capture);
 
   /* ===== connect ===== */
   renderAll();
