@@ -245,6 +245,8 @@ td.mut { color: var(--muted); }
 .pill.OC { background: var(--accent-soft); color: var(--accent); margin-top: 4px; }
 .ico.cust { background: var(--accent-soft); color: var(--accent); }
 td.reason { min-width: 170px; }
+td.reason.detail { min-width: 220px; max-width: 320px; white-space: normal; }
+textarea.rin { width: 100%; min-width: 200px; resize: vertical; font: inherit; }
 td.reason .edited { display: inline-block; margin-left: 6px; font-size: 11px; font-weight: 700; color: var(--accent); cursor: help; }
 .mini { appearance: none; border: 1px solid var(--line); background: var(--panel); border-radius: 6px; padding: 2px 8px; font-size: 12px; font-weight: 600; cursor: pointer; margin-left: 6px; }
 .mini.primary { background: var(--accent); border-color: var(--accent); color: var(--panel); margin-left: 0; }
@@ -437,7 +439,7 @@ td.empty-cell { text-align: center; color: var(--muted); padding: 24px; }
           <span id="lock-err" class="lock-err" hidden>Kata kunci salah.</span>
         </div>
         <div id="lock-on" class="lockrow" hidden>
-          <span class="lock-t">🔓 Mode edit aktif. Klik <b>Edit</b> / <b>Isi</b> di kolom Reason atau Master Brand.</span>
+          <span class="lock-t">🔓 Mode edit aktif. Klik <b>Edit</b> / <b>Isi</b> di kolom Reason, Detail, atau Master Brand.</span>
           <button class="btn" id="lock-close" type="button">Kunci lagi</button>
         </div>
       </div>
@@ -454,7 +456,7 @@ td.empty-cell { text-align: center; color: var(--muted); padding: 24px; }
       <p class="note" id="shown">Menampilkan 0 NP</p>
       <div class="tablewrap">
         <table>
-          <thead><tr><th>Status</th><th>Janji kirim</th><th>Close terakhir</th><th>No. NP</th><th>Item Name</th><th>Qty</th><th>Tipe NP</th><th>Reason</th><th>Master Brand</th><th>Comment</th></tr></thead>
+          <thead><tr><th>Status</th><th>Janji kirim</th><th>Close terakhir</th><th>No. NP</th><th>Item Name</th><th>Qty</th><th>Tipe NP</th><th>Reason</th><th>Detail</th><th>Master Brand</th><th>Comment</th></tr></thead>
           <tbody id="tbody"></tbody>
         </table>
       </div>
@@ -669,9 +671,12 @@ var SB_KEY = "sb_publishable_KiSRfZUjVh1jW2kai0O0_Q_ZWn4oXT_";
   /* autofill: an empty Reason becomes "Amsen" when the Comment mentions amsen (an edited Reason always wins) */
   const AMSEN_RE = /amsen/i;
   const autoReason = (u) => (!u.reason.join('').trim() && AMSEN_RE.test(u.comment.join(' ')) ? 'Amsen' : '');
-  const isAuto = (u) => !S.reasons.has(rid(u)) && !!autoReason(u);
-  const reasonOf = (u) => { const o = S.reasons.get(rid(u)); return o ? (o.reason || '') : (u.reason.join('; ') || autoReason(u)); };
-  const isEdited = (u) => S.reasons.has(rid(u));
+  /* data editan per NP (koleksi reasons): {reason: kategori Late, detail: teks bebas}; keduanya opsional */
+  const robj = (u) => S.reasons.get(rid(u));
+  const hasR = (o) => !!o && o.reason != null && o.reason !== '';
+  const isAuto = (u) => !hasR(robj(u)) && !!autoReason(u);
+  const reasonOf = (u) => { const o = robj(u); return hasR(o) ? o.reason : (u.reason.join('; ') || autoReason(u)); };
+  const isEdited = (u) => hasR(robj(u));
   const brandOf = (u) => { const o = S.brands.get(rid(u)); return o ? (o.brand || '') : ''; };
   const OC_RE = /reschedule\s*customer|\(rc\)|^\s*rc\b|amsen/i;
   const REASON_CATS = ['RC&AMSEN', 'TBDC', 'TBSPL', 'PECAH', 'INTERNAL', 'SISTEM ERROR'];
@@ -850,12 +855,52 @@ var SB_KEY = "sb_publishable_KiSRfZUjVh1jW2kai0O0_Q_ZWn4oXT_";
       el('p', {class: 'note', style: 'margin-top:8px', textContent: 'Kontribusi ke NP Late ALL = NP Late + Outstanding parameter ÷ total NP Late + Outstanding ALL.'}));
   };
 
+  /* Detail: teks bebas per NP. Isi awal dari kolom "Detail Reason" di file,
+     atau teks Reason asli yang bukan nama kategori (mis. "Amsen"). */
+  const fileDetail = (u) => {
+    const ds = [...new Set(u.fail.map((f) => String(f.detail || '').trim()).filter(Boolean))];
+    if (ds.length) return ds.join('; ');
+    return [...new Set(u.fail.map((f) => String(f.reason || '').trim()).filter((x) => x && catOfText(x) !== x))].join('; ');
+  };
+  const detailOf = (u) => { const o = robj(u); return o && o.detail != null ? o.detail : fileDetail(u); };
+  /* simpan ke dokumen yang sama tanpa menghapus isian lain (reason/detail) */
+  const saveReasonDoc = (u, patch) => {
+    const d = Object.assign({}, robj(u) || {}, {np: u.np, pd: u.pd, original: u.reason.join('; ')}, patch, {at: new Date().toISOString(), by: me || null});
+    for (const k of Object.keys(d)) if (d[k] === undefined) delete d[k];
+    return db.doc('reasons/' + rid(u)).set(d);
+  };
+  const detailCell = (u) => {
+    const td = el('td', {class: 'reason detail'});
+    const view = () => {
+      const tx = detailOf(u), o = robj(u);
+      td.replaceChildren(el('span', {textContent: tx || '—'}));
+      if (o && o.detail != null) td.append(el('span', {class: 'edited', textContent: 'diubah', title: 'Detail asli: ' + (fileDetail(u) || '—')}));
+      if (S.unlocked) { const eb = el('button', {class: 'mini', type: 'button', textContent: 'Edit', 'aria-label': 'Edit detail ' + u.np}); eb.addEventListener('click', edit); td.append(eb); }
+    };
+    const edit = () => {
+      const inp = el('textarea', {class: 'rin', rows: 2, placeholder: 'Tulis detail penyebab late…'}); inp.value = detailOf(u);
+      const save = el('button', {class: 'mini primary', type: 'button', textContent: 'Simpan'});
+      const cancel = el('button', {class: 'mini', type: 'button', textContent: 'Batal'});
+      const err = el('div', {class: 'rerr', hidden: true});
+      const box = el('div', {class: 'redit'}, inp, el('div', {class: 'rbtns'}, save, cancel), err);
+      cancel.addEventListener('click', view);
+      const doSave = async () => {
+        save.disabled = true; save.textContent = 'Menyimpan…';
+        try { await saveReasonDoc(u, {detail: inp.value.trim()}); }
+        catch (e) { err.hidden = false; err.textContent = e && e.code === 'invalid_argument' ? 'PIN salah atau sudah tidak berlaku. Masukkan PIN lagi.' : 'Gagal menyimpan. Periksa internet lalu coba lagi.'; save.disabled = false; save.textContent = 'Simpan'; }
+      };
+      save.addEventListener('click', doSave);
+      inp.addEventListener('keydown', (e) => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) doSave(); if (e.key === 'Escape') view(); });
+      td.replaceChildren(box); inp.focus();
+    };
+    view();
+    return td;
+  };
   const reasonCell = (u) => {
     const td = el('td', {class: 'reason'});
     const view = () => {
-      const rTxt = reasonOf(u), rCat = catOfText(rTxt);
-      td.replaceChildren(el('span', {textContent: rTxt || '—'}));
-      if (rTxt && rCat !== rTxt) td.append(el('span', {class: 'cat-chip' + (rCat === 'Lainnya' ? ' other' : ''), textContent: rCat}));
+      const rTxt = reasonOf(u), rCat = rTxt ? catOfText(rTxt) : '';
+      td.replaceChildren(rCat ? el('span', {class: 'cat-chip' + (rCat === 'Lainnya' ? ' other' : ''), style: 'margin-left:0', textContent: rCat, title: rTxt !== rCat ? 'Teks Reason asli: ' + rTxt : ''}) : el('span', {textContent: '—'}));
       if (isEdited(u)) td.append(el('span', {class: 'edited', textContent: 'diubah', title: 'Reason asli: ' + (u.reason.join('; ') || autoReason(u) || '—')}));
       else if (isAuto(u)) td.append(el('span', {class: 'edited', textContent: 'otomatis', title: 'Diisi otomatis karena Comment berisi “amsen”'}));
       if (S.unlocked) {
@@ -875,14 +920,14 @@ var SB_KEY = "sb_publishable_KiSRfZUjVh1jW2kai0O0_Q_ZWn4oXT_";
       const box = el('div', {class: 'redit'}, inp, el('div', {class: 'rbtns'}, save, cancel), err);
       if (isEdited(u)) {
         const rv = el('button', {class: 'mini', type: 'button', textContent: 'Kembalikan asli'});
-        rv.addEventListener('click', async () => { rv.disabled = true; try { await db.doc('reasons/' + rid(u)).delete(); } catch (e) { err.hidden = false; err.textContent = 'Gagal mengembalikan. Coba lagi.'; rv.disabled = false; } });
+        rv.addEventListener('click', async () => { rv.disabled = true; try { const o = robj(u); if (o && o.detail != null) await saveReasonDoc(u, {reason: undefined}); else await db.doc('reasons/' + rid(u)).delete(); } catch (e) { err.hidden = false; err.textContent = 'Gagal mengembalikan. Coba lagi.'; rv.disabled = false; } });
         box.querySelector('.rbtns').append(rv);
       }
       cancel.addEventListener('click', view);
       const doSave = async () => {
         if (!inp.value) { err.hidden = false; err.textContent = 'Pilih salah satu kategori reason.'; return; }
         save.disabled = true; save.textContent = 'Menyimpan…';
-        try { await db.doc('reasons/' + rid(u)).set({np: u.np, pd: u.pd, reason: inp.value.trim(), original: u.reason.join('; '), at: new Date().toISOString(), by: me || null}); }
+        try { await saveReasonDoc(u, {reason: inp.value.trim()}); }
         catch (e) { err.hidden = false; err.textContent = e && e.code === 'invalid_argument' ? 'PIN salah atau sudah tidak berlaku. Masukkan PIN lagi.' : 'Gagal menyimpan. Periksa internet lalu coba lagi.'; save.disabled = false; save.textContent = 'Simpan'; }
       };
       save.addEventListener('click', doSave);
@@ -904,7 +949,7 @@ var SB_KEY = "sb_publishable_KiSRfZUjVh1jW2kai0O0_Q_ZWn4oXT_";
     }
     return [...m.values()].sort((a, b2) => (a.key === NONE) - (b2.key === NONE) || b2.total - a.total || (a.key < b2.key ? -1 : 1));
   };
-  const reasonKey = (u) => (reasonOf(u) || '').trim();
+  const reasonKey = (u) => { const x = (reasonOf(u) || '').trim(); return x ? catOfText(x) : ''; };
   const renderFailList = (box, g, all) => {
     box.replaceChildren();
     if (!g.length) { box.append(el('div', {class: 'empty', textContent: 'Tidak ada NP Late atau Outstanding.'})); return; }
@@ -1055,12 +1100,12 @@ var SB_KEY = "sb_publishable_KiSRfZUjVh1jW2kai0O0_Q_ZWn4oXT_";
     const q = S.q;
     const rows = us.filter((u) => u.status === 'LATE' || u.status === 'OTS')
       .filter((u) => S.f === 'all' || u.status === S.f)
-      .filter((u) => !q || [u.np, u.fail.map((f) => f.ic + ' ' + f.item).join(' '), u.comment.join(' '), u.type, reasonOf(u), brandOf(u)].join(' ').toLowerCase().includes(q))
+      .filter((u) => !q || [u.np, u.fail.map((f) => f.ic + ' ' + f.item).join(' '), u.comment.join(' '), u.type, reasonOf(u), catOfText(reasonOf(u)), detailOf(u), brandOf(u)].join(' ').toLowerCase().includes(q))
       .sort((a, b2) => (a.pd < b2.pd ? -1 : a.pd > b2.pd ? 1 : RANK[a.status] - RANK[b2.status]));
     S.lastRows = rows;
     $('#shown').textContent = 'Menampilkan ' + int(rows.length) + ' NP · ' + int(rows.reduce((n, u) => n + u.fail.length, 0)) + ' item';
     const tb = $('#tbody'); tb.replaceChildren();
-    if (!rows.length) { tb.append(el('tr', {}, el('td', {class: 'empty-cell', colSpan: 10, textContent: S.loaded ? 'Tidak ada NP Late atau Outstanding pada filter ini.' : 'Memuat data…'}))); return; }
+    if (!rows.length) { tb.append(el('tr', {}, el('td', {class: 'empty-cell', colSpan: 11, textContent: S.loaded ? 'Tidak ada NP Late atau Outstanding pada filter ini.' : 'Memuat data…'}))); return; }
     for (const u of rows) {
       tb.append(el('tr', {},
         el('td', {class: 'nw'}, el('span', {class: 'pill ' + u.status, textContent: u.status === 'OTS' ? 'Outstanding' : 'Late'}), isOC(u) ? el('div', {}, el('span', {class: 'pill OC', textContent: 'RC dan AMSEN'})) : null),
@@ -1071,6 +1116,7 @@ var SB_KEY = "sb_publishable_KiSRfZUjVh1jW2kai0O0_Q_ZWn4oXT_";
         el('td', {class: 'nw num'}, ...(u.fail.length ? u.fail.map((f) => el('div', {class: 'line', textContent: (f.qty == null || f.qty === '' ? '—' : int(f.qty)) + (f.uom ? ' ' + f.uom : '')})) : ['—'])),
         el('td', {textContent: u.type}),
         reasonCell(u),
+        detailCell(u),
         brandCell(u),
         el('td', {class: 'mut', textContent: u.comment.join('; ') || '—'}),
       ));
@@ -1133,7 +1179,7 @@ var SB_KEY = "sb_publishable_KiSRfZUjVh1jW2kai0O0_Q_ZWn4oXT_";
   const A = {st: 'all', q: '', limit: 300, rows: []};
   const STLABEL = {ONTIME: 'On time', EARLY: 'Early', LATE: 'Late', OTS: 'Outstanding'};
   const rowAuto = (r) => (!String(r.reason || '').trim() && AMSEN_RE.test(r.comment || '') ? 'Amsen' : '');
-  const rowReason = (r) => { const o = S.reasons.get(rid(r)); return o ? (o.reason || '') : ([r.reason, r.detail].filter(Boolean).join(' – ') || rowAuto(r)); };
+  const rowReason = (r) => { const o = S.reasons.get(rid(r)); return hasR(o) ? o.reason : ([r.reason, r.detail].filter(Boolean).join(' – ') || rowAuto(r)); };
   const allRows = () => {
     const ids = new Set(sel().map((u) => u.id));
     return S.rows.filter((r) => ids.has(r.np + '|' + r.pd));
@@ -1286,15 +1332,15 @@ var SB_KEY = "sb_publishable_KiSRfZUjVh1jW2kai0O0_Q_ZWn4oXT_";
       const rowsEl = months.map((mo) => {
         const r = byMonth.get(mo); let sum = 0;
         const cells = cats.map((k) => { tot[k] += r[k]; sum += r[k]; return td(r[k] ? int(r[k]) : '–', r[k] ? (k === 'RC&AMSEN' ? 'adj' : '') : 'zero'); });
-        return el('tr', {}, td(BULAN_FULL[mo - 1]), ...cells, td(int(sum)), td(int(sum - r['RC&AMSEN'])), td(pct(allBy.get(mo) ? sum / allBy.get(mo) : null)));
+        return el('tr', {}, td(BULAN_FULL[mo - 1]), ...cells, td(int(sum)), td(int(sum - r['RC&AMSEN'])));
       });
       const grand = cats.reduce((a, k) => a + tot[k], 0);
       const tbl = $('#sd-t-late');
-      const H = ['Bulan', ...cats, 'Total Late', 'Total tanpa RC&AMSEN', '% Late dari ALL NP'];
+      const H = ['Bulan', ...cats, 'Total Late', 'Total tanpa RC&AMSEN'];
       tbl.replaceChildren(
         el('thead', {}, el('tr', {}, ...H.map((h, i) => el('th', {textContent: h, style: 'cursor:default' + (i === 0 ? ';text-align:left' : '')})))),
         el('tbody', {}, ...(rowsEl.length ? rowsEl : [el('tr', {}, el('td', {colSpan: H.length, style: 'text-align:center;color:var(--muted)', textContent: 'Tidak ada NP Late atau Outstanding pada filter ini.'}))])),
-        el('tfoot', {}, el('tr', {}, td('Total'), ...cats.map((k) => td(int(tot[k]))), td(int(grand)), td(int(grand - tot['RC&AMSEN'])), td(pct(aT.all ? grand / aT.all : null)))));
+        el('tfoot', {}, el('tr', {}, td('Total'), ...cats.map((k) => td(int(tot[k]))), td(int(grand)), td(int(grand - tot['RC&AMSEN'])))));
     }
     drawTable($('#sd-t-store'), 'month', 'Bulan', [['allTY', 'ALL NP TY'], ['oeTY', 'OE TY'], ['lateTY', 'Late TY'], ['achTY', 'Ach TY'], ['ocTY', 'RC & AMSEN TY'], ['achCTY', 'Adjust RC&AMSEN TY'], ['ctrTY', 'CTR 2 Day TY'], ['allLY', 'ALL NP LY'], ['oeLY', 'OE LY'], ['lateLY', 'Late LY'], ['achLY', 'Ach LY'], ['ocLY', 'RC & AMSEN LY'], ['achCLY', 'Adjust RC&AMSEN LY'], ['ctrLY', 'CTR 2 Day LY']]);
   };
@@ -1436,7 +1482,7 @@ var SB_KEY = "sb_publishable_KiSRfZUjVh1jW2kai0O0_Q_ZWn4oXT_";
       aoa.push([
         numOr(r.sn), r.store || '', r.rm || '', r.dn || '', '', r.type || '', r.np, r.cust || '', numOr(r.phone), numOr(r.ic), r.item || '', r.uom || '',
         r.qty == null || r.qty === '' ? '' : r.qty, serial(r.od), serial(r.pd), serial(r.pod), serial(r.cd), r.status, r.spc || '', r.sales || '',
-        r.comment || '', '', r.amsen || '', dayOf(r), r.param || '', ed ? (ed.reason || '') : (r.reason || rowAuto(r)), ed ? '' : (r.detail || ''),
+        r.comment || '', '', r.amsen || '', dayOf(r), r.param || '', hasR(ed) ? ed.reason : (r.reason || rowAuto(r)), ed && ed.detail != null ? ed.detail : (r.detail || ''),
       ]);
     }
     const ws = XLSX.utils.aoa_to_sheet(aoa);
@@ -1461,7 +1507,7 @@ var SB_KEY = "sb_publishable_KiSRfZUjVh1jW2kai0O0_Q_ZWn4oXT_";
     if (!downloads) { flash(box, 'err', 'Download tidak tersedia di tampilan ini.'); return; }
     const H = ['Status', 'Promised Delivery Date', 'Close Date', 'NPNo', 'DNNo', 'Type NP', 'Item Code', 'Item Name', 'Qty', 'UOM', 'Delivery Parameter', 'Amsen', 'Reason', 'Detail Reason', 'Master Brand', 'Comment', 'Kategori Customer'];
     const aoa = [H];
-    for (const u of rows) for (const f of u.fail) aoa.push([f.status === 'OTS' ? 'OUTSTANDING' : 'LATE', serial(u.pd), serial(f.cd), u.np, f.dn, u.type, f.ic, f.item, f.qty == null ? '' : f.qty, f.uom, u.param, u.amsen.startsWith('Ambil') ? 'Yes' : 'No', isEdited(u) ? reasonOf(u) : (f.reason || rowAuto(f)), isEdited(u) ? '' : f.detail, brandOf(u), f.comment, isOC(u) ? 'RC dan AMSEN' : '']);
+    for (const u of rows) for (const f of u.fail) aoa.push([f.status === 'OTS' ? 'OUTSTANDING' : 'LATE', serial(u.pd), serial(f.cd), u.np, f.dn, u.type, f.ic, f.item, f.qty == null ? '' : f.qty, f.uom, u.param, u.amsen.startsWith('Ambil') ? 'Yes' : 'No', (reasonOf(u) ? catOfText(reasonOf(u)) : ''), detailOf(u), brandOf(u), f.comment, isOC(u) ? 'RC dan AMSEN' : '']);
     const ws = XLSX.utils.aoa_to_sheet(aoa);
     for (let r = 1; r < aoa.length; r++) for (const c of [1, 2]) { const ref = XLSX.utils.encode_cell({r, c}); if (ws[ref] && ws[ref].t === 'n') ws[ref].z = 'yyyy-mm-dd'; }
     ws['!cols'] = H.map((h, i) => ({wch: i === 7 ? 48 : i === 14 ? 36 : Math.max(10, h.length + 2)}));
