@@ -4,6 +4,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=DM+Serif+Display&display=swap">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <style>
 /* Layout: one centred column, header with period filter, three tabs (summary / failed NP / data & upload). */
 /* Blue & white theme: one deliberate light look (no dark variant), blue header band, white cards. */
@@ -52,7 +53,6 @@ h1 { margin: 2px 0 0; font-family: var(--f-num); font-weight: 400; font-size: cl
 .pinov { position: fixed; inset: 0; background: rgba(0,0,0,.5); display: flex; align-items: center; justify-content: center; padding: 16px; z-index: 60; }
 .pinov[hidden] { display: none; }
 .pindlg { max-width: 380px; width: 100%; display: flex; flex-direction: column; gap: 10px; }
-.pindlg input[type=password] { padding: 9px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); color: inherit; font: inherit; }
 .pm-bars { display: flex; flex-direction: column; gap: 10px; margin-top: 4px; }
 .pm-row { display: grid; grid-template-columns: 150px 1fr; gap: 12px; align-items: center; }
 .pm-l { font-size: 13px; font-weight: 600; }
@@ -65,11 +65,71 @@ h1 { margin: 2px 0 0; font-family: var(--f-num); font-weight: 400; font-size: cl
 .pm-t td.pos { color: var(--ok); font-weight: 700; } .pm-t td.neg { color: var(--ots); font-weight: 700; }
 .pm-t tfoot td { font-weight: 700; border-top: 2px solid var(--line); }
 @media (max-width: 700px) { .pm-row { grid-template-columns: 1fr; gap: 4px; } }
-.capbtn { margin-left: auto; flex: none; appearance: none; display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--line); background: var(--panel); color: var(--fg); border-radius: 9px; padding: 8px 12px; font: 600 13px inherit; font-family: inherit; cursor: pointer; white-space: nowrap; }
-.capbtn:hover { border-color: var(--accent); color: var(--accent); }
-.capbtn:disabled { opacity: .55; cursor: progress; }
-.capval { font-weight: 600; }
+.pindlg input[type=password] { padding: 9px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); color: inherit; font: inherit; }
 .pindlg .rbtns { display: flex; justify-content: flex-end; gap: 8px; }
+/* Summary DSL — blue & white */
+:root { --sd-ty: #1458b8; --sd-ly: #7fb3f0; }
+.sd-head { display: flex; flex-direction: column; gap: 4px; align-items: center; text-align: center; }
+.sd-title { margin: 0; font-size: clamp(22px, 3.4vw, 32px); font-weight: 800; letter-spacing: .06em; color: var(--accent); }
+.sd-filters { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 140px), 1fr)); gap: 8px; }
+.sd-f { display: flex; flex-direction: column; gap: 4px; background: var(--panel); border: 1px solid var(--line); border-top: 3px solid var(--accent); border-radius: 8px; padding: 6px 8px; font-size: 12px; font-weight: 700; color: var(--accent-2); box-shadow: var(--shadow); }
+.sd-f.sd-wide { grid-column: span 2; }
+@media (max-width: 560px) { .sd-f.sd-wide { grid-column: auto; } }
+.sd-f select { font: inherit; font-weight: 500; font-size: 12.5px; padding: 4px 6px; border: 1px solid var(--line); border-radius: 6px; background: var(--accent-soft); color: var(--fg); }
+.sd-f select[disabled] { opacity: .55; }
+.sd-top { display: grid; grid-template-columns: minmax(0, 520px) minmax(0, 1fr); gap: 14px; align-items: stretch; }
+@media (max-width: 900px) { .sd-top { grid-template-columns: minmax(0, 1fr); } }
+.sd-tiles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.sd-tile { border-radius: 10px; padding: 16px 10px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; text-align: center; box-shadow: var(--shadow); }
+.sd-tile.ty { background: linear-gradient(135deg, var(--accent) 0%, var(--accent-2) 100%); color: var(--on-accent); }
+.sd-tile.ly { background: var(--panel); border: 1px solid var(--line); border-top: 3px solid var(--sd-ly); color: var(--fg); }
+.sd-tile.adj.ty { background: linear-gradient(135deg, #2b8ae6 0%, #1667c4 100%); outline: 2px solid #9cc3f5; outline-offset: -6px; }
+.sd-tile.adj.ly { border-top-color: var(--accent); }
+.sd-tile b { font-size: clamp(24px, 2.8vw, 32px); font-weight: 600; color: inherit; }
+.sd-tile span { font-size: 13px; color: inherit; opacity: .92; }
+.wrap .sd-chart { padding: 12px 14px; gap: 6px; background: var(--panel); }
+.sd-chart-h { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 6px; font-size: 13px; color: var(--accent-2); }
+.sd-leg { display: inline-flex; align-items: center; gap: 6px; font-size: 11.5px; color: var(--muted); }
+.sd-leg i { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
+.sd-line { position: relative; min-height: 200px; }
+.sd-tables { display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; align-items: start; }
+.sd-tw { overflow: auto; max-height: 460px; border: 1px solid var(--line); border-radius: 10px; background: var(--panel); box-shadow: var(--shadow); }
+.sd-t { width: 100%; border-collapse: collapse; font-size: 12.5px; font-variant-numeric: tabular-nums; }
+.wrap .sd-t th { position: sticky; top: 0; background: var(--accent); color: var(--on-accent); font-weight: 700; padding: 8px 9px; text-align: right; border-bottom: 0; cursor: pointer; white-space: nowrap; font-size: 12px; }
+.wrap .sd-t th:first-child { text-align: left; }
+.sd-t th[aria-sort="descending"]::after { content: " ▼"; font-size: 9px; }
+.sd-t th[aria-sort="ascending"]::after { content: " ▲"; font-size: 9px; }
+.sd-t td { padding: 7px 9px; text-align: right; border-bottom: 1px solid var(--line); white-space: nowrap; }
+.sd-t td:first-child { text-align: left; font-weight: 600; }
+.sd-t tbody tr:nth-child(odd) td { background: var(--panel); }
+.sd-t tbody tr:nth-child(even) td { background: var(--accent-soft); }
+.sd-t tbody tr:hover td { background: #d9e7fb; }
+.sd-t td.adj { color: var(--accent); font-weight: 800; }
+.sd-t tfoot td { font-weight: 800; background: var(--accent-soft); color: var(--accent-2); border-top: 2px solid var(--accent); position: sticky; bottom: 0; }
+.sd-sub-h { display: flex; flex-direction: column; gap: 2px; margin-top: 4px; }
+.sd-h3 { margin: 0; font-size: 16px; font-weight: 800; color: var(--accent-2); }
+.sd-t td.wrapc { white-space: normal; min-width: 220px; text-align: left; }
+.sd-chip { display: inline-block; padding: 1px 8px; border-radius: 999px; font-size: 11px; font-weight: 800; }
+.sd-chip.oc { background: var(--accent-soft); color: var(--accent); }
+.sd-chip.lt { background: var(--bad-soft); color: var(--ots); }
+.wrap .sd-t th.sd-grp { text-align: center; font-size: 13px; letter-spacing: .08em; cursor: default; border-left: 2px solid #ffffff; }
+.wrap .sd-t th.sd-grp.ty { background: var(--accent-2); }
+.wrap .sd-t th.sd-grp.ly { background: #4a86d1; }
+.wrap .sd-t th.sd-sub { top: 33px; background: var(--accent); }
+.wrap .sd-t th.sd-sub.ly { background: #5b95dc; }
+.wrap .sd-t th.sd-first { border-left: 2px solid #ffffff; }
+.wrap .sd-t th.sd-rs { vertical-align: middle; }
+.sd-t td.sd-first { border-left: 2px solid var(--line); }
+.capbar { display: flex; justify-content: flex-end; align-items: center; gap: 10px; margin-bottom: -8px; }
+.capbar .cap-msg { font-size: 12.5px; font-weight: 600; }
+.capbar .cap-msg.ok { color: var(--ok); }
+.capbar .cap-msg.err { color: var(--ots); }
+.wrap.capturing .tablewrap, .wrap.capturing .sd-tw { max-height: none !important; overflow: visible !important; }
+.wrap.capturing .capbar, .wrap.capturing #all-more, .wrap.capturing .pinbtn { display: none !important; }
+.cat-chip { display: inline-block; margin-left: 6px; padding: 0 7px; border-radius: 999px; font-size: 10.5px; font-weight: 800; background: var(--accent-soft); color: var(--accent); vertical-align: 1px; }
+.cat-chip.other { background: var(--warn-soft); color: var(--late); }
+.sd-t td.zero { color: var(--muted); }
+.sd-tip { position: absolute; pointer-events: none; background: #fff; border: 1px solid var(--line); border-radius: 6px; padding: 6px 9px; font-size: 12px; box-shadow: 0 4px 14px rgba(0,0,0,.15); white-space: nowrap; z-index: 5; }
 .fsep { width: 1px; align-self: stretch; background: var(--line); margin: 0 4px; }
 .fgroup { display: flex; flex-direction: column; gap: 3px; }
 .flabel { font-size: 12px; color: var(--muted); font-weight: 600; }
@@ -264,15 +324,15 @@ td.empty-cell { text-align: center; color: var(--muted); padding: 24px; }
   </header>
 
   <nav class="tabs" role="tablist" aria-label="Halaman">
-    <button class="tab" role="tab" id="tab-ringkasan" data-tab="ringkasan" aria-selected="true">Ringkasan DSL</button>
+    <button class="tab" role="tab" id="tab-summary" data-tab="summary" aria-selected="true">Summary DSL</button>
+    <button class="tab" role="tab" id="tab-ringkasan" data-tab="ringkasan" aria-selected="false">Analisa DSL</button>
     <button class="tab" role="tab" id="tab-gagal" data-tab="gagal" aria-selected="false">NP Late &amp; Outstanding <span class="badge num" id="badge-miss">0</span></button>
     <button class="tab" role="tab" id="tab-semua" data-tab="semua" aria-selected="false">All Data Pengiriman</button>
     <button class="tab" role="tab" id="tab-upload" data-tab="upload" aria-selected="false">Data &amp; Upload</button>
-    <button class="capbtn" id="cap-btn" type="button" title="Unduh gambar PNG dari seluruh isi tab yang sedang dibuka"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>Capture gambar</button>
   </nav>
 
   <!-- TAB 1 -->
-  <section class="page" id="ringkasan" role="tabpanel" aria-labelledby="tab-ringkasan">
+  <section class="page" id="ringkasan" role="tabpanel" aria-labelledby="tab-ringkasan" hidden>
     <div id="sum-state" class="card state"><b>Memuat data…</b>Mohon tunggu sebentar.</div>
     <div id="sum-body" class="page" hidden>
       <div class="card hero">
@@ -316,6 +376,41 @@ td.empty-cell { text-align: center; color: var(--muted); padding: 24px; }
         </ul>
       </details>
     </div>
+  </section>
+
+  <!-- TAB: SUMMARY DSL (format seperti report Power BI) -->
+  <section class="page" id="summary" role="tabpanel" aria-labelledby="tab-summary">
+    <div class="sd-head">
+      <h2 class="sd-title">DELIVERY SERVICE LEVEL</h2>
+      <p class="note" style="margin:0">Satuan: NP unik per tanggal janji kirim. TY = tahun terpilih (Periode), LY = tahun sebelumnya di bulan yang sama. Filter Comment di atas ikut berlaku; filter Dari–Sampai tidak dipakai di tab ini.</p>
+    </div>
+    <div class="sd-filters" role="group" aria-label="Filter Summary DSL">
+      <label class="sd-f"><span>MONTH</span><select id="sd-month"><option value="">Semua</option></select></label>
+      <label class="sd-f sd-wide"><span>Store Name</span><select id="sd-store"><option value="">Semua</option></select></label>
+      <label class="sd-f sd-wide"><span>TRANSPORTER NAME</span><select id="sd-transporter"><option value="ASG" selected>ASG</option></select></label>
+      <label class="sd-f"><span>PERIODE</span><select id="sd-year"></select></label>
+    </div>
+    <div class="sd-top">
+      <div class="sd-tiles">
+        <div class="sd-tile ty"><b class="num" id="sd-ach-ty">—</b><span>Ach TY</span></div>
+        <div class="sd-tile ty"><b class="num" id="sd-ctr-ty">—</b><span>CTR 2 Day TY</span></div>
+        <div class="sd-tile ty adj"><b class="num" id="sd-adj-ty">—</b><span>Adjust RC&amp;AMSEN TY</span></div>
+        <div class="sd-tile ly"><b class="num" id="sd-ach-ly">—</b><span>Ach LY</span></div>
+        <div class="sd-tile ly"><b class="num" id="sd-ctr-ly">—</b><span>CTR 2 Day LY</span></div>
+        <div class="sd-tile ly adj"><b class="num" id="sd-adj-ly">—</b><span>Adjust RC&amp;AMSEN LY</span></div>
+      </div>
+      <div class="sd-chart card">
+        <div class="sd-chart-h"><b>Ach LY dan Ach TY oleh MONTH</b>
+          <span class="sd-leg"><i style="background:var(--sd-ly)"></i>Ach LY <i style="background:var(--sd-ty)"></i>Ach TY</span></div>
+        <div id="sd-line" class="sd-line"></div>
+      </div>
+    </div>
+    <div class="sd-tables">
+      <div class="sd-tw"><table class="sd-t" id="sd-t-store"></table></div>
+    </div>
+    <div class="sd-sub-h"><h3 class="sd-h3">Summary Late</h3><p class="note" style="margin:0">Jumlah NP Late &amp; Outstanding TY per bulan, dipecah per kategori Reason. Mengikuti filter MONTH, Store Name, PERIODE, dan Comment di atas.</p></div>
+    <div class="sd-tw"><table class="sd-t" id="sd-t-late"></table></div>
+    <p class="note" style="margin:0">Definisi sementara (silakan dikoreksi): <b>OE</b> = NP On time + Early · <b>Late</b> = NP Late + Outstanding · <b>Ach</b> = OE ÷ ALL NP · <b>RC &amp; AMSEN</b> = NP Late/Outstanding dengan Reason Reschedule Customer (RC) atau Amsen · <b>Adjust RC&amp;AMSEN</b> = (OE + RC &amp; AMSEN) ÷ ALL NP · <b>CTR 2 Day</b> = porsi NP dengan Delivery Parameter Sameday / Next Day / 2 Days.</p>
   </section>
 
   <!-- TAB 2 -->
@@ -496,7 +591,7 @@ var SB_KEY = "sb_publishable_KiSRfZUjVh1jW2kai0O0_Q_ZWn4oXT_";
   let db = null, user = null, me = null, downloads = null, canWrite = false, canDelete = false, PIN = '';
 
   /* ===== tabs ===== */
-  const TABS = ['ringkasan', 'gagal', 'semua', 'upload'];
+  const TABS = ['summary', 'ringkasan', 'gagal', 'semua', 'upload'];
   const showTab = (id) => {
     if (!TABS.includes(id)) return;
     S.tab = id;
@@ -505,7 +600,7 @@ var SB_KEY = "sb_publishable_KiSRfZUjVh1jW2kai0O0_Q_ZWn4oXT_";
     try { history.replaceState(null, '', '#' + id); } catch (e) {}
   };
   for (const b of $$('.tab')) b.addEventListener('click', () => showTab(b.dataset.tab));
-  showTab(TABS.includes(location.hash.slice(1)) ? location.hash.slice(1) : 'ringkasan');
+  showTab(TABS.includes(location.hash.slice(1)) ? location.hash.slice(1) : 'summary');
   window.addEventListener('hashchange', () => showTab(location.hash.slice(1)));
 
   /* ===== merge + aggregate ===== */
@@ -534,7 +629,7 @@ var SB_KEY = "sb_publishable_KiSRfZUjVh1jW2kai0O0_Q_ZWn4oXT_";
     const um = new Map();
     for (const r of S.rows) {
       const id = r.np + '|' + r.pd;
-      if (!um.has(id)) um.set(id, {id, np: r.np, pd: r.pd, type: r.type || '—', param: r.param || 'Tidak diketahui', amsen: r.amsen === 'Yes' ? 'Ambil sendiri (Amsen)' : 'Dikirim', status: r.status, close: '', items: 0, fail: [], reason: [], comment: [], store: r.store});
+      if (!um.has(id)) um.set(id, {id, np: r.np, pd: r.pd, rm: r.rm || '', storeName: r.store || '', type: r.type || '—', param: r.param || 'Tidak diketahui', amsen: r.amsen === 'Yes' ? 'Ambil sendiri (Amsen)' : 'Dikirim', status: r.status, close: '', items: 0, fail: [], reason: [], comment: [], store: r.store});
       const u = um.get(id);
       u.items++;
       if (RANK[r.status] > RANK[u.status]) u.status = r.status;
@@ -578,7 +673,19 @@ var SB_KEY = "sb_publishable_KiSRfZUjVh1jW2kai0O0_Q_ZWn4oXT_";
   const reasonOf = (u) => { const o = S.reasons.get(rid(u)); return o ? (o.reason || '') : (u.reason.join('; ') || autoReason(u)); };
   const isEdited = (u) => S.reasons.has(rid(u));
   const brandOf = (u) => { const o = S.brands.get(rid(u)); return o ? (o.brand || '') : ''; };
-  const OC_RE = /reschedule\s*customer|\(rc\)|^\s*rc\s*$|amsen/i;
+  const OC_RE = /reschedule\s*customer|\(rc\)|^\s*rc\b|amsen/i;
+  const REASON_CATS = ['RC&AMSEN', 'TBDC', 'TBSPL', 'PECAH', 'INTERNAL', 'SISTEM ERROR'];
+  const catOfText = (t) => {
+    const r = String(t || '').trim();
+    if (!r) return 'Belum diisi';
+    if (OC_RE.test(r)) return 'RC&AMSEN';
+    if (/tbdc/i.test(r)) return 'TBDC';
+    if (/tbspl/i.test(r)) return 'TBSPL';
+    if (/pecah/i.test(r)) return 'PECAH';
+    if (/internal/i.test(r)) return 'INTERNAL';
+    if (/sistem|system|error/i.test(r)) return 'SISTEM ERROR';
+    return 'Lainnya';
+  };
   const isOC = (u) => (u.status === 'LATE' || u.status === 'OTS') && OC_RE.test(reasonOf(u));
   const worst = (g) => g.reduce((w, x) => (!w || x.dsl < w.dsl ? x : w), null);
 
@@ -746,7 +853,9 @@ var SB_KEY = "sb_publishable_KiSRfZUjVh1jW2kai0O0_Q_ZWn4oXT_";
   const reasonCell = (u) => {
     const td = el('td', {class: 'reason'});
     const view = () => {
-      td.replaceChildren(el('span', {textContent: reasonOf(u) || '—'}));
+      const rTxt = reasonOf(u), rCat = catOfText(rTxt);
+      td.replaceChildren(el('span', {textContent: rTxt || '—'}));
+      if (rTxt && rCat !== rTxt) td.append(el('span', {class: 'cat-chip' + (rCat === 'Lainnya' ? ' other' : ''), textContent: rCat}));
       if (isEdited(u)) td.append(el('span', {class: 'edited', textContent: 'diubah', title: 'Reason asli: ' + (u.reason.join('; ') || autoReason(u) || '—')}));
       else if (isAuto(u)) td.append(el('span', {class: 'edited', textContent: 'otomatis', title: 'Diisi otomatis karena Comment berisi “amsen”'}));
       if (S.unlocked) {
@@ -756,8 +865,10 @@ var SB_KEY = "sb_publishable_KiSRfZUjVh1jW2kai0O0_Q_ZWn4oXT_";
       }
     };
     const edit = () => {
-      const inp = el('input', {class: 'rin', type: 'text', value: reasonOf(u), placeholder: 'Pilih atau ketik reason'});
-      inp.setAttribute('list', 'reason-opts');
+      const inp = el('select', {class: 'rin'});
+      inp.append(el('option', {value: '', textContent: 'Pilih kategori reason…'}), ...REASON_CATS.map((c) => el('option', {value: c, textContent: c})));
+      const curCat = catOfText(reasonOf(u));
+      inp.value = REASON_CATS.includes(curCat) ? curCat : '';
       const save = el('button', {class: 'mini primary', type: 'button', textContent: 'Simpan'});
       const cancel = el('button', {class: 'mini', type: 'button', textContent: 'Batal'});
       const err = el('div', {class: 'rerr', hidden: true});
@@ -769,6 +880,7 @@ var SB_KEY = "sb_publishable_KiSRfZUjVh1jW2kai0O0_Q_ZWn4oXT_";
       }
       cancel.addEventListener('click', view);
       const doSave = async () => {
+        if (!inp.value) { err.hidden = false; err.textContent = 'Pilih salah satu kategori reason.'; return; }
         save.disabled = true; save.textContent = 'Menyimpan…';
         try { await db.doc('reasons/' + rid(u)).set({np: u.np, pd: u.pd, reason: inp.value.trim(), original: u.reason.join('; '), at: new Date().toISOString(), by: me || null}); }
         catch (e) { err.hidden = false; err.textContent = e && e.code === 'invalid_argument' ? 'PIN salah atau sudah tidak berlaku. Masukkan PIN lagi.' : 'Gagal menyimpan. Periksa internet lalu coba lagi.'; save.disabled = false; save.textContent = 'Simpan'; }
@@ -1066,7 +1178,160 @@ var SB_KEY = "sb_publishable_KiSRfZUjVh1jW2kai0O0_Q_ZWn4oXT_";
   $('#qa').addEventListener('input', (e) => { A.q = e.target.value.trim().toLowerCase(); A.limit = 300; renderAllData(); });
   $('#all-more').addEventListener('click', () => { A.limit += 300; renderAllData(); });
 
-  const renderAll = () => { renderHeader(); renderSummary(); renderTable(); renderAllData(); renderHistory(); };
+  /* ===== Summary DSL (format report Power BI) ===== */
+  const SD = {month: '', store: '', year: '', sort: {month: ['key', 1]}};
+  const BULAN_FULL = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+  const TWO_DAY = new Set(['Sameday', 'Next Day', '2 Days']);
+  const sdBase = () => S.units.filter((u) => (S.cm === 'all' || cmOf(u)[S.cm]) && (!SD.store || u.storeName === SD.store));
+  const sdAgg = (list) => {
+    const all = list.length, oe = list.filter((u) => u.status === 'ONTIME' || u.status === 'EARLY').length, two = list.filter((u) => TWO_DAY.has(u.param)).length;
+    const oc = list.filter(isOC).length;
+    return {all, oe, late: all - oe, ach: all ? oe / all : null, ctr: all ? two / all : null, oc, achC: all ? (oe + oc) / all : null};
+  };
+  const sdFillSelect = (sel, values, cur, label) => {
+    sel.replaceChildren(...(label ? [el('option', {value: '', textContent: 'Semua'})] : []), ...values.map(([v, t]) => el('option', {value: v, textContent: t})));
+    sel.value = values.some(([v]) => String(v) === String(cur)) ? cur : (label ? '' : (values.length ? values[values.length - 1][0] : ''));
+    return sel.value;
+  };
+  const renderSumDsl = () => {
+    if (!$('#sd-year')) return;
+    const units = S.units;
+    const years = [...new Set(units.map((u) => u.pd.slice(0, 4)))].sort();
+    SD.year = sdFillSelect($('#sd-year'), years.map((y) => [y, y]), SD.year || years[years.length - 1], false) || '';
+    const yr = SD.year, ly = yr ? String(Number(yr) - 1) : '';
+    const months = [...new Set(units.filter((u) => u.pd.slice(0, 4) === yr || u.pd.slice(0, 4) === ly).map((u) => Number(u.pd.slice(5, 7))))].sort((a, b2) => a - b2);
+    SD.month = sdFillSelect($('#sd-month'), months.map((m) => [String(m), BULAN_FULL[m - 1]]), SD.month, true);
+    SD.store = sdFillSelect($('#sd-store'), [...new Set(units.map((u) => u.storeName).filter(Boolean))].sort().map((v) => [v, v]), SD.store, true);
+    const base = sdBase();
+    const inYear = (u, y) => u.pd.slice(0, 4) === y && (!SD.month || Number(u.pd.slice(5, 7)) === Number(SD.month));
+    const TY = base.filter((u) => inYear(u, yr)), LY = base.filter((u) => inYear(u, ly));
+    const aT = sdAgg(TY), aL = sdAgg(LY);
+    $('#sd-ach-ty').textContent = pct(aT.ach); $('#sd-ctr-ty').textContent = pct(aT.ctr);
+    $('#sd-ach-ly').textContent = pct(aL.ach); $('#sd-ctr-ly').textContent = pct(aL.ctr);
+    $('#sd-adj-ty').textContent = pct(aT.achC); $('#sd-adj-ly').textContent = pct(aL.achC);
+    /* line chart by month */
+    const box = $('#sd-line'); box.replaceChildren();
+    const byM = (y) => { const m = new Map(); for (const u of base) if (u.pd.slice(0, 4) === y) { const k = Number(u.pd.slice(5, 7)); if (!m.has(k)) m.set(k, []); m.get(k).push(u); } return m; };
+    const mT = byM(yr), mL = byM(ly);
+    const ms = [...new Set([...mT.keys(), ...mL.keys()])].sort((a, b2) => a - b2);
+    if (!ms.length) { box.append(el('div', {class: 'empty', textContent: 'Belum ada data.'})); }
+    else {
+      const NS = 'http://www.w3.org/2000/svg', W = Math.max(300, box.clientWidth || 600), H = 210, m = {t: 18, r: 56, b: 30, l: 44};
+      const pts = (mm) => ms.filter((k) => mm.has(k)).map((k) => ({k, v: sdAgg(mm.get(k)).ach}));
+      const pT = pts(mT), pL = pts(mL);
+      const vals = [...pT, ...pL].map((p) => p.v).filter((v) => v != null);
+      let lo = Math.min(...vals), hi = Math.max(...vals); if (hi - lo < 0.04) { lo -= 0.02; hi += 0.02; }
+      lo = Math.max(0, Math.floor(lo * 50) / 50); hi = Math.min(1, Math.ceil(hi * 50) / 50);
+      const x = (k) => ms.length === 1 ? (m.l + W - m.r) / 2 : m.l + (W - m.l - m.r) * (ms.indexOf(k) / (ms.length - 1));
+      const y = (v) => m.t + (H - m.t - m.b) * (1 - (v - lo) / (hi - lo || 1));
+      const svg = document.createElementNS(NS, 'svg'); svg.setAttribute('width', '100%'); svg.setAttribute('viewBox', `0 0 ${W} ${H}`); svg.setAttribute('role', 'img'); svg.setAttribute('aria-label', 'Ach LY dan Ach TY per bulan');
+      const add = (tag, at, txt) => { const e2 = document.createElementNS(NS, tag); for (const [k, v] of Object.entries(at)) e2.setAttribute(k, v); if (txt != null) e2.textContent = txt; svg.append(e2); return e2; };
+      const stepV = (hi - lo) > 0.12 ? 0.05 : 0.02; lo = Math.floor(lo / stepV) * stepV; hi = Math.ceil(hi / stepV) * stepV; const steps = Math.round((hi - lo) / stepV); for (let i = 0; i <= steps; i++) { const v = lo + stepV * i; add('line', {x1: m.l, x2: W - m.r, y1: y(v), y2: y(v), stroke: '#e3ecf8', 'stroke-width': 1}); add('text', {x: m.l - 6, y: y(v) + 4, 'text-anchor': 'end', 'font-size': 10.5, fill: '#4a5b75'}, Math.round(v * 100) + '%'); }
+      for (const k of ms) add('text', {x: x(k), y: H - 10, 'text-anchor': 'middle', 'font-size': 10.5, fill: '#4a5b75'}, BULAN[k - 1]);
+      const draw = (p, color, name, above) => {
+        if (!p.length) return;
+        add('polyline', {points: p.map((q) => x(q.k) + ',' + y(q.v)).join(' '), fill: 'none', stroke: color, 'stroke-width': 2.2, 'stroke-linejoin': 'round', 'stroke-linecap': 'round'});
+        for (const q of p) { add('circle', {cx: x(q.k), cy: y(q.v), r: 3, fill: color}); add('text', {x: x(q.k), y: y(q.v) + (above ? -8 : 15), 'text-anchor': 'middle', 'font-size': 10.5, fill: '#2c3e57'}, pct(q.v)); }
+        const last = p[p.length - 1]; add('text', {x: W - m.r + 6, y: y(last.v) + 4, 'font-size': 10.5, fill: color, 'font-weight': 700}, name);
+      };
+      const lAbove = pL.length && pT.length ? pL[pL.length - 1].v >= pT[pT.length - 1].v : true;
+      draw(pL, '#7fb3f0', 'Ach LY', lAbove); draw(pT, '#1458b8', 'Ach TY', !lAbove);
+      box.append(svg);
+      if (!pL.length) box.append(el('div', {class: 'note', style: 'margin:0', textContent: 'Belum ada data tahun ' + (ly || 'sebelumnya') + ' (LY), jadi garis Ach LY belum tampil.'}));
+    }
+    /* tables */
+    const mOf = (u) => Number(u.pd.slice(5, 7));
+    const groupRows = () => {
+      const keys = [...new Set([...TY, ...LY].map(mOf))];
+      return keys.map((k) => { const t = sdAgg(TY.filter((u) => mOf(u) === k)), l = sdAgg(LY.filter((u) => mOf(u) === k));
+        return {key: k, allTY: t.all, oeTY: t.oe, lateTY: t.late, achTY: t.ach, ocTY: t.oc, achCTY: t.achC, ctrTY: t.ctr, allLY: l.all, oeLY: l.oe, lateLY: l.late, achLY: l.ach, ocLY: l.oc, achCLY: l.achC, ctrLY: l.ctr}; });
+    };
+    const tot = {key: 'Total', allTY: aT.all, oeTY: aT.oe, lateTY: aT.late, achTY: aT.ach, ocTY: aT.oc, achCTY: aT.achC, ctrTY: aT.ctr, allLY: aL.all, oeLY: aL.oe, lateLY: aL.late, achLY: aL.ach, ocLY: aL.oc, achCLY: aL.achC, ctrLY: aL.ctr};
+    const fmt = {key: (v) => (typeof v === 'number' ? BULAN_FULL[v - 1] : v), allTY: int, oeTY: int, lateTY: int, achTY: pct, ocTY: int, achCTY: pct, ctrTY: pct, ocLY: (v) => (v ? int(v) : '—'), achCLY: pct, allLY: (v) => (v ? int(v) : '—'), oeLY: (v) => (v ? int(v) : '—'), lateLY: (v) => (v ? int(v) : '—'), achLY: pct, ctrLY: pct};
+    const drawTable = (tbl, which, first, cols) => {
+      const rows = groupRows();
+      const [sk, dir] = SD.sort[which];
+      rows.sort((a, b2) => { const va = a[sk], vb = b2[sk]; if (va == null) return 1; if (vb == null) return -1; return (typeof va === 'string' ? String(va).localeCompare(String(vb)) : va - vb) * dir; });
+      const mkTh = (k, t, extra) => {
+        const th = el('th', {textContent: t, ...(extra || {})});
+        if (k === sk) th.setAttribute('aria-sort', dir > 0 ? 'ascending' : 'descending');
+        th.addEventListener('click', () => { SD.sort[which] = [k, sk === k ? -dir : (k === 'key' ? 1 : -1)]; renderSumDsl(); });
+        return th; };
+      const tyCols = cols.filter(([k]) => k.endsWith('TY')), lyCols = cols.filter(([k]) => k.endsWith('LY'));
+      const strip = (t) => t.replace(/\s*(TY|LY)$/, '');
+      const top = el('tr', {}, mkTh('key', first, {rowSpan: 2, className: 'sd-rs'}),
+        el('th', {colSpan: tyCols.length, className: 'sd-grp ty', textContent: 'TY'}),
+        el('th', {colSpan: lyCols.length, className: 'sd-grp ly', textContent: 'LY'}));
+      const sub = el('tr', {}, ...tyCols.map(([k, t], i) => mkTh(k, strip(t), {className: 'sd-sub' + (i === 0 ? ' sd-first' : '')})), ...lyCols.map(([k, t], i) => mkTh(k, strip(t), {className: 'sd-sub ly' + (i === 0 ? ' sd-first' : '')})));
+      const head = [top, sub];
+      const firsts = new Set([tyCols[0] && tyCols[0][0], lyCols[0] && lyCols[0][0]]);
+      const line = (r) => el('tr', {}, ...[['key'], ...cols].map(([k]) => el('td', {class: (k.startsWith('achC') ? 'adj' : '') + (firsts.has(k) ? ' sd-first' : ''), textContent: r[k] == null ? '—' : fmt[k](r[k])})));
+      tbl.replaceChildren(el('thead', {}, ...head), el('tbody', {}, ...rows.map(line)), el('tfoot', {}, line(tot)));
+    };
+    /* Summary Late: Bulan (baris) x Kategori Reason (kolom) */
+    {
+      const fails = TY.filter((u) => u.status === 'LATE' || u.status === 'OTS');
+      const extra = ['Lainnya', 'Belum diisi'].filter((c) => fails.some((u) => catOfText(reasonOf(u)) === c));
+      const cats = [...REASON_CATS, ...extra];
+      const byMonth = new Map();
+      for (const u of fails) {
+        const mo = Number(u.pd.slice(5, 7)), c = catOfText(reasonOf(u));
+        if (!byMonth.has(mo)) byMonth.set(mo, Object.fromEntries(cats.map((k) => [k, 0])));
+        byMonth.get(mo)[c]++;
+      }
+      const allBy = new Map(); for (const u of TY) { const mo = Number(u.pd.slice(5, 7)); allBy.set(mo, (allBy.get(mo) || 0) + 1); }
+      const months = [...byMonth.keys()].sort((a, b2) => a - b2);
+      const tot = Object.fromEntries(cats.map((k) => [k, 0]));
+      const td = (t, cls) => el('td', {class: cls || '', textContent: t});
+      const rowsEl = months.map((mo) => {
+        const r = byMonth.get(mo); let sum = 0;
+        const cells = cats.map((k) => { tot[k] += r[k]; sum += r[k]; return td(r[k] ? int(r[k]) : '–', r[k] ? (k === 'RC&AMSEN' ? 'adj' : '') : 'zero'); });
+        return el('tr', {}, td(BULAN_FULL[mo - 1]), ...cells, td(int(sum)), td(int(sum - r['RC&AMSEN'])), td(pct(allBy.get(mo) ? sum / allBy.get(mo) : null)));
+      });
+      const grand = cats.reduce((a, k) => a + tot[k], 0);
+      const tbl = $('#sd-t-late');
+      const H = ['Bulan', ...cats, 'Total Late', 'Total tanpa RC&AMSEN', '% Late dari ALL NP'];
+      tbl.replaceChildren(
+        el('thead', {}, el('tr', {}, ...H.map((h, i) => el('th', {textContent: h, style: 'cursor:default' + (i === 0 ? ';text-align:left' : '')})))),
+        el('tbody', {}, ...(rowsEl.length ? rowsEl : [el('tr', {}, el('td', {colSpan: H.length, style: 'text-align:center;color:var(--muted)', textContent: 'Tidak ada NP Late atau Outstanding pada filter ini.'}))])),
+        el('tfoot', {}, el('tr', {}, td('Total'), ...cats.map((k) => td(int(tot[k]))), td(int(grand)), td(int(grand - tot['RC&AMSEN'])), td(pct(aT.all ? grand / aT.all : null)))));
+    }
+    drawTable($('#sd-t-store'), 'month', 'Bulan', [['allTY', 'ALL NP TY'], ['oeTY', 'OE TY'], ['lateTY', 'Late TY'], ['achTY', 'Ach TY'], ['ocTY', 'RC & AMSEN TY'], ['achCTY', 'Adjust RC&AMSEN TY'], ['ctrTY', 'CTR 2 Day TY'], ['allLY', 'ALL NP LY'], ['oeLY', 'OE LY'], ['lateLY', 'Late LY'], ['achLY', 'Ach LY'], ['ocLY', 'RC & AMSEN LY'], ['achCLY', 'Adjust RC&AMSEN LY'], ['ctrLY', 'CTR 2 Day LY']]);
+  };
+  for (const [id, k] of [['#sd-month', 'month'], ['#sd-store', 'store'], ['#sd-year', 'year']]) $(id).addEventListener('change', (e) => { SD[k] = e.target.value; renderSumDsl(); });
+  window.addEventListener('resize', () => { if (!$('#summary').hidden) renderSumDsl(); });
+  for (const b of $$('.tab[data-tab="summary"]')) b.addEventListener('click', () => setTimeout(renderSumDsl, 0));
+
+  /* ===== Capture: save the active tab (with header) as a PNG ===== */
+  const TAB_NAME = {summary: 'Summary_DSL', ringkasan: 'Analisa_DSL', gagal: 'NP_Late_Outstanding', semua: 'All_Data_Pengiriman', upload: 'Data_Upload'};
+  for (const page of $$('.page[role=tabpanel]')) {
+    const msg = el('span', {class: 'cap-msg', hidden: true});
+    const btn = el('button', {class: 'btn primary', type: 'button', title: 'Simpan tampilan tab ini sebagai gambar PNG'});
+    btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>Capture tab ini';
+    btn.addEventListener('click', async () => {
+      const show = (cls, t) => { msg.className = 'cap-msg ' + cls; msg.textContent = t; msg.hidden = false; };
+      if (!window.html2canvas) { show('err', 'Alat capture belum termuat. Muat ulang halaman lalu coba lagi.'); return; }
+      if (!downloads) { show('err', 'Simpan file tidak tersedia di tampilan ini.'); return; }
+      const wrap = $('.wrap');
+      btn.disabled = true; show('', 'Membuat gambar…');
+      wrap.classList.add('capturing');
+      try {
+        await new Promise((r) => setTimeout(r, 60));
+        const w = wrap.scrollWidth;
+        const canvas = await html2canvas(wrap, {backgroundColor: getComputedStyle(document.body).backgroundColor || '#ffffff', scale: Math.min(2, window.devicePixelRatio || 1.5), useCORS: true, logging: false, width: w, windowWidth: Math.max(w, document.documentElement.clientWidth)});
+        const blob = await new Promise((res) => canvas.toBlob(res, 'image/png'));
+        const d = new Date(), stamp = d.getFullYear() + String(d.getMonth() + 1).padStart(2, '0') + String(d.getDate()).padStart(2, '0') + '_' + String(d.getHours()).padStart(2, '0') + String(d.getMinutes()).padStart(2, '0');
+        const name = 'DSL_' + (TAB_NAME[page.id] || page.id) + '_' + stamp + '.png';
+        await downloads.save({filename: name, data: await blob.arrayBuffer()});
+        show('ok', 'Tersimpan: ' + name);
+      } catch (e) {
+        if (e && e.code === 'declined') msg.hidden = true; else show('err', 'Capture gagal. Coba lagi.');
+      } finally { wrap.classList.remove('capturing'); btn.disabled = false; }
+    });
+    page.prepend(el('div', {class: 'capbar'}, msg, btn));
+  }
+
+  const renderAll = () => { renderHeader(); renderSummary(); renderSumDsl(); renderTable(); renderAllData(); renderHistory(); };
 
   /* ===== filters ===== */
   for (const [id, key] of [['#f-from', 'from'], ['#f-to', 'to']]) {
@@ -1490,93 +1755,17 @@ var SB_KEY = "sb_publishable_KiSRfZUjVh1jW2kai0O0_Q_ZWn4oXT_";
     }})}),
   };
   /* ambil data terbaru otomatis, kecuali saat sedang mengetik/menyimpan */
-  const idle = () => { const a = document.activeElement; return document.visibilityState === 'visible' && !S.saving && !S.pending && $('#pin-ov').hidden && !(a && (a.tagName === 'INPUT' || a.tagName === 'TEXTAREA') && a.closest('table')); };
+  const idle = () => { const a = document.activeElement; return document.visibilityState === 'visible' && !S.saving && !S.pending && $('#pin-ov').hidden && !(a && (a.tagName === 'INPUT' || a.tagName === 'TEXTAREA' || a.tagName === 'SELECT') && a.closest('table')); };
   const pollAll = () => { for (const c of Object.keys(LS)) poll(c); };
   setInterval(() => { if (idle()) pollAll(); }, 30000);
   document.addEventListener('visibilitychange', () => { if (idle() && Date.now() - lastPoll > 10000) pollAll(); });
   window.addEventListener('focus', () => { if (idle() && Date.now() - lastPoll > 10000) pollAll(); });
   /* download file langsung dari browser */
+  const MIME = {png: 'image/png', xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', csv: 'text/csv'};
   const DL = {save: async ({filename, data, type}) => {
-    const u = URL.createObjectURL(new Blob([data], {type: type || 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}));
+    const u = URL.createObjectURL(new Blob([data], {type: type || MIME[String(filename).split('.').pop().toLowerCase()] || 'application/octet-stream'}));
     const a = document.createElement('a'); a.href = u; a.download = filename; document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(u), 30000);
   }};
-
-  /* ===== capture gambar (PNG) per tab =====
-     Header + isi tab aktif disalin ke wadah lebar tetap di luar layar, tombol/kolom isian
-     diganti teks, tabel dibuka penuh (tanpa scroll), lalu dirender html2canvas. */
-  const TABNAME = {ringkasan: 'Ringkasan DSL', gagal: 'NP Late & Outstanding', semua: 'All Data Pengiriman', upload: 'Data & Upload'};
-  const loadH2C = () => window.html2canvas ? Promise.resolve() : new Promise((ok, no) => { const s = document.createElement('script'); s.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js'; s.onload = ok; s.onerror = () => no(new Error('pembuat gambar tidak bisa dimuat')); document.head.append(s); });
-  const fixSvg = (orig, clone) => {
-    const o = orig.querySelectorAll('svg'), c = clone.querySelectorAll('svg');
-    for (let i = 0; i < o.length && i < c.length; i++) {
-      const oe = [o[i], ...o[i].querySelectorAll('*')], ce = [c[i], ...c[i].querySelectorAll('*')];
-      for (let j = 0; j < oe.length && j < ce.length; j++) {
-        const s = getComputedStyle(oe[j]);
-        for (const pr of ['fill', 'stroke', 'stroke-width', 'stroke-dasharray', 'stroke-dashoffset', 'stroke-linecap', 'opacity']) { const v = s.getPropertyValue(pr); if (v) ce[j].setAttribute(pr, v); }
-      }
-      const r = o[i].getBoundingClientRect(); if (r.width) { c[i].setAttribute('width', Math.round(r.width)); c[i].setAttribute('height', Math.round(r.height)); }
-    }
-  };
-  const cleanClone = (orig, cl) => {
-    fixSvg(orig, cl);
-    /* bagian lipat (details): yang tertutup hanya judulnya, yang terbuka isinya; ubah jadi div biasa */
-    const od = orig.querySelectorAll('details'), cd = cl.querySelectorAll('details');
-    cd.forEach((d, i) => {
-      const open = od[i] && od[i].open, nd = el('div', {className: d.className});
-      for (const k of [...d.childNodes]) {
-        if (k.nodeType === 1 && k.tagName === 'SUMMARY') { const s = el('div', {className: k.className}); s.style.cssText = 'font-weight:700;list-style:none'; s.append(...k.childNodes); nd.append(s); }
-        else if (open) nd.append(k);
-      }
-      if (!open) nd.append(el('div', {className: 'note', textContent: '(bagian ini tertutup saat gambar dibuat)', style: 'margin-top:4px'}));
-      d.replaceWith(nd);
-    });
-    /* tanggal & pencarian: tampilkan nilainya sebagai teks */
-    const oi = orig.querySelectorAll('input'), ci = cl.querySelectorAll('input');
-    ci.forEach((inp, i) => {
-      const src = oi[i], ty = (inp.type || '').toLowerCase();
-      if (ty === 'date') { const sp = el('span', {class: 'capval', textContent: src && src.value ? dDate(src.value, true) : 'Semua'}); inp.replaceWith(sp); }
-      else if (ty === 'search' || ty === 'text') { if (src && src.value) inp.replaceWith(el('span', {class: 'capval', textContent: 'Cari: “' + src.value + '”'})); else inp.remove(); }
-      else inp.remove();
-    });
-    cl.querySelectorAll('.pinbtn, #pin-btn, .lockbar, .mini, #f-reset, #btn-xls, #btn-all-xls, #all-more, #btn-template, #btn-save, #btn-cancel, #reset, .drop, [hidden], .tip').forEach((n) => n.remove());
-    cl.querySelectorAll('.btn').forEach((b) => { if (!b.closest('.seg') && !b.classList.contains('chip')) b.remove(); });
-    cl.querySelectorAll('.tablewrap, .scroll').forEach((w) => { w.style.maxHeight = 'none'; w.style.overflow = 'visible'; });
-    cl.querySelectorAll('[id]').forEach((n) => n.removeAttribute('id'));
-  };
-  const capture = async () => {
-    const btn = $('#cap-btn'), page = $('#' + S.tab), head = $('.top');
-    if (!page) return;
-    btn.disabled = true; const old = btn.lastChild.textContent; btn.lastChild.textContent = 'Membuat gambar…';
-    let box = null;
-    try {
-      await loadH2C();
-      const W = S.tab === 'gagal' || S.tab === 'semua' ? 1500 : 1280;
-      const bg = getComputedStyle(document.body).backgroundColor;
-      box = el('div', {style: 'position:absolute;left:-30000px;top:0;width:' + W + 'px;padding:18px;display:flex;flex-direction:column;gap:14px;background:' + bg + ';color:' + getComputedStyle(document.body).color});
-      const h = head.cloneNode(true); cleanClone(head, h);
-      const pg = page.cloneNode(true); pg.hidden = false; cleanClone(page, pg);
-      const ds = S.rows.map((r) => r.pd).sort();
-      const per = (S.from || ds[0]) && (S.to || ds[ds.length - 1]) ? dDate(S.from || ds[0], true) + ' – ' + dDate(S.to || ds[ds.length - 1], true) : 'semua tanggal';
-      const cm = S.cm === 'kirim' ? 'Kirim' : S.cm === 'amsen' ? 'Amsen' : 'Semua';
-      const at = new Date();
-      const cap = el('div', {style: 'display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;font-size:13px;color:var(--muted);font-weight:600'},
-        el('span', {textContent: 'Tab: ' + TABNAME[S.tab] + ' · Periode janji kirim: ' + per + ' · Comment: ' + cm}),
-        el('span', {textContent: 'Dibuat ' + at.toLocaleString('id-ID')}));
-      box.append(h, cap, pg); document.body.append(box);
-      await new Promise((r) => setTimeout(r, 60));
-      const sc = Math.max(1, Math.min(2, 15000 / box.scrollHeight));
-      const cv = await html2canvas(box, {scale: sc, backgroundColor: bg, windowWidth: W + 60, windowHeight: box.scrollHeight + 40, height: box.scrollHeight, width: box.offsetWidth, useCORS: true, logging: false});
-      box.remove(); box = null;
-      const blob = await new Promise((r) => cv.toBlob(r, 'image/png'));
-      const fn = 'DSL_' + TABNAME[S.tab].replace(/[^A-Za-z0-9]+/g, '_').replace(/_+$/, '') + '_' + (S.from || ds[0] || '') + '_' + (S.to || ds[ds.length - 1] || '') + '.png';
-      await DL.save({filename: fn, data: await blob.arrayBuffer(), type: 'image/png'});
-    } catch (e) {
-      if (box) box.remove();
-      alertBox('Gagal membuat gambar (' + ((e && e.message) || 'error') + '). Silakan screenshot layar secara manual.');
-    } finally { btn.disabled = false; btn.lastChild.textContent = old; }
-  };
-  const alertBox = (txt) => { const m = el('div', {class: 'msg err', textContent: txt, style: 'margin:10px 0'}); $('.tabs').after(m); setTimeout(() => m.remove(), 8000); };
-  $('#cap-btn').addEventListener('click', capture);
 
   /* ===== connect ===== */
   renderAll();
