@@ -66,6 +66,13 @@ h1 { margin: 2px 0 0; font-family: var(--f-num); font-weight: 400; font-size: cl
 .pm-t tfoot td { font-weight: 700; border-top: 2px solid var(--line); }
 @media (max-width: 700px) { .pm-row { grid-template-columns: 1fr; gap: 4px; } }
 .pindlg input[type=password] { padding: 9px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); color: inherit; font: inherit; }
+.oc-tog { display: flex; justify-content: flex-start; }
+.colf { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 10px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--bg); }
+.colf-t { font-size: 12px; font-weight: 700; color: var(--accent); align-self: center; margin-right: 2px; }
+.colf label { display: flex; flex-direction: column; gap: 3px; font-size: 11.5px; font-weight: 600; color: var(--muted); }
+.colf select, .colf input { font: inherit; font-size: 13px; padding: 6px 8px; border: 1px solid var(--line); border-radius: 7px; background: var(--panel); color: inherit; min-width: 150px; }
+.colf #ff-d { min-width: 190px; }
+@media (max-width: 700px) { .colf label { flex: 1 1 140px; } .colf select, .colf input, .colf #ff-d { min-width: 0; width: 100%; } }
 .pindlg .rbtns { display: flex; justify-content: flex-end; gap: 8px; }
 /* Summary DSL — blue & white */
 :root { --sd-ty: #1458b8; --sd-ly: #7fb3f0; }
@@ -349,16 +356,6 @@ td.empty-cell { text-align: center; color: var(--muted); padding: 24px; }
       <section class="card" id="wk-card"></section>
       <section class="card" id="rb-card"></section>
       <section class="card" id="pm-card"></section>
-      <section class="card">
-        <div><h2>DSL per hari</h2><p class="note">Satu baris = satu tanggal janji kirim. Panjang warna = porsi NP per status.</p></div>
-        <div class="legend">
-          <span><i class="sw" style="background:var(--ok)"></i>On time</span>
-          <span><i class="sw" style="background:var(--early)"></i>Early</span>
-          <span><i class="sw" style="background:var(--late)"></i>Late</span>
-          <span><i class="sw" style="background:var(--ots)"></i>Outstanding</span>
-        </div>
-        <div class="rows" data-dim="date"></div>
-      </section>
       <div class="grid2">
         <section class="card"><div><h2>DSL per tipe NP</h2><p class="note">Diurutkan dari DSL terendah.</p></div><div class="rows" data-dim="type"></div></section>
         <section class="card"><div><h2>DSL per parameter pengiriman</h2><p class="note">Jarak tanggal janji kirim dari tanggal order.</p></div><div class="rows" data-dim="param"></div></section>
@@ -453,6 +450,13 @@ td.empty-cell { text-align: center; color: var(--muted); padding: 24px; }
         <option value="Alamat tidak ditemukan"></option>
       </datalist>
       <datalist id="brand-opts"></datalist>
+      <div class="colf" role="group" aria-label="Filter kolom Reason, Detail, dan Master Brand">
+        <span class="colf-t">Filter kolom</span>
+        <label>Reason<select id="ff-r"><option value="">Semua</option></select></label>
+        <label>Detail<input id="ff-d" type="search" placeholder="Cari detail…" autocomplete="off"></label>
+        <label>Master Brand<select id="ff-b"><option value="">Semua</option></select></label>
+        <button class="btn" id="ff-x" type="button" hidden>Hapus filter</button>
+      </div>
       <p class="note" id="shown">Menampilkan 0 NP</p>
       <div class="tablewrap">
         <table>
@@ -589,7 +593,7 @@ var SB_KEY = "sb_publishable_KiSRfZUjVh1jW2kai0O0_Q_ZWn4oXT_";
   ];
 
   /* ===== state ===== */
-  const S = {uploads: [], chunks: new Map(), rows: [], units: [], from: '', to: '', tab: 'ringkasan', f: 'all', cm: 'all', lastRows: [], reasons: new Map(), brands: new Map(), unlocked: false, q: '', loaded: false, dbNull: false, pending: null};
+  const S = {uploads: [], chunks: new Map(), rows: [], units: [], from: '', to: '', tab: 'ringkasan', f: 'all', cm: 'all', lastRows: [], reasons: new Map(), brands: new Map(), unlocked: false, ocShow: (() => { try { return localStorage.getItem('dsl_oc_show') !== '0'; } catch (e) { return true; } })(), fr: '', fd: '', fb: '', q: '', loaded: false, dbNull: false, pending: null};
   let db = null, user = null, me = null, downloads = null, canWrite = false, canDelete = false, PIN = '';
 
   /* ===== tabs ===== */
@@ -765,6 +769,9 @@ var SB_KEY = "sb_publishable_KiSRfZUjVh1jW2kai0O0_Q_ZWn4oXT_";
     const big = (label, v, sub, cls) => el('div', {class: 'oc-big ' + (cls || '')}, el('span', {class: 'oc-l', textContent: label}), el('span', {class: 'oc-v num', textContent: v}), el('span', {class: 'oc-s', textContent: sub}));
     const delta = c.dslCust != null && c.dsl != null ? (c.dslCust - c.dsl) * 100 : 0;
     const dRows = groups(us, 'date');
+    /* tombol tampilkan / sembunyikan rincian per tanggal janji (pilihan diingat di browser ini) */
+    const ocTog = el('div', {class: 'oc-tog'}, el('button', {class: 'btn', type: 'button', 'aria-expanded': String(!!S.ocShow), textContent: S.ocShow ? '▾ Sembunyikan per tanggal janji' : '▸ Tampilkan per tanggal janji (' + int(dRows.length) + ' tanggal)'}));
+    ocTog.firstChild.addEventListener('click', () => { S.ocShow = !S.ocShow; try { localStorage.setItem('dsl_oc_show', S.ocShow ? '1' : '0'); } catch (e) {} renderSummary(); });
     const tbl = el('table', {class: 'oc-t'},
       el('thead', {}, el('tr', {}, ...['Tanggal janji', 'Total NP', 'DSL', 'RC dan AMSEN', 'DSL Customer'].map((h) => el('th', {textContent: h})))),
       el('tbody', {}, ...dRows.map((r) => el('tr', {},
@@ -777,7 +784,8 @@ var SB_KEY = "sb_publishable_KiSRfZUjVh1jW2kai0O0_Q_ZWn4oXT_";
         el('div', {class: 'oc-arrow', textContent: '→'}),
         big('DSL Customer', pct(c.dslCust), int(c.ok + c.oc) + ' dari ' + int(c.total) + ' NP', 'main'),
         big('RC dan AMSEN', '+' + int(c.oc), (delta >= 0 ? '+' : '') + delta.toFixed(1).replace('.', ',') + ' poin DSL', 'cust')),
-      el('div', {class: 'tablewrap', style: 'max-height:none'}, tbl),
+      ocTog,
+      S.ocShow ? el('div', {class: 'tablewrap', style: 'max-height:none'}, tbl) : null,
     );
     renderWeekly(us);
     renderParam(us);
@@ -968,11 +976,25 @@ var SB_KEY = "sb_publishable_KiSRfZUjVh1jW2kai0O0_Q_ZWn4oXT_";
         el('div', {class: 'r-name'}, r.key, el('small', {class: 'num', textContent: 'Late ' + int(r.late) + ' · OTS ' + int(r.ots)})), bar, v));
     }
   };
-  /* ===== analisa kiriman per minggu (Minggu–Sabtu) ===== */
+  /* ===== analisa kiriman per minggu (Senin–Minggu, dipotong per bulan) =====
+     Week 1 = tanggal 1 sampai hari Minggu pertama; week terakhir berhenti di akhir bulan.
+     Contoh: tanggal 1 jatuh hari Selasa -> Week 1 = Selasa 1 s/d Minggu 6. */
   const isoOf = (t) => { const d = new Date(t); return d.getUTCFullYear() + '-' + String(d.getUTCMonth() + 1).padStart(2, '0') + '-' + String(d.getUTCDate()).padStart(2, '0'); };
-  const weekStart = (s) => { const [y, m, d] = dp(s); const t = Date.UTC(y, m - 1, d); return isoOf(t - new Date(t).getUTCDay() * 864e5); };
-  const weekEnd = (ws) => { const [y, m, d] = dp(ws); return isoOf(Date.UTC(y, m - 1, d) + 6 * 864e5); };
-  const weekLabel = (ws) => { const we = weekEnd(ws); return dDate(ws) + ' – ' + dDate(we, true); };
+  const MONS = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+  const weekStart = (s) => {
+    const [y, m, d] = dp(s); const t = Date.UTC(y, m - 1, d);
+    const mon = t - ((new Date(t).getUTCDay() + 6) % 7) * 864e5;
+    return isoOf(Math.max(mon, Date.UTC(y, m - 1, 1)));
+  };
+  const weekEnd = (ws) => {
+    const [y, m, d] = dp(ws); const t = Date.UTC(y, m - 1, d);
+    const sun = t + (6 - (new Date(t).getUTCDay() + 6) % 7) * 864e5;
+    return isoOf(Math.min(sun, Date.UTC(y, m, 0)));
+  };
+  const weekNo = (ws) => { const [y, m, d] = dp(ws); const off = (new Date(Date.UTC(y, m - 1, 1)).getUTCDay() + 6) % 7; return Math.floor((d - 1 + off) / 7) + 1; };
+  const weekSpan = (ws) => { const [y, m, d] = dp(ws), [y2, m2, d2] = dp(weekEnd(ws)); return Math.round((Date.UTC(y2, m2 - 1, d2) - Date.UTC(y, m - 1, d)) / 864e5) + 1; };
+  const weekName = (ws) => { const [y, m] = dp(ws); return 'Week ' + weekNo(ws) + ' ' + MONS[m - 1] + ' ' + y; };
+  const weekLabel = (ws) => { const we = weekEnd(ws); return weekName(ws) + ' · ' + (ws === we ? dDate(ws) : dDate(ws) + ' – ' + dDate(we)); };
   const weeks = (us) => {
     const m = new Map();
     for (const u of us) { const k = weekStart(u.pd); if (!m.has(k)) m.set(k, []); m.get(k).push(u); }
@@ -987,14 +1009,14 @@ var SB_KEY = "sb_publishable_KiSRfZUjVh1jW2kai0O0_Q_ZWn4oXT_";
     const dTxt = (d) => (d == null ? 'belum ada minggu sebelumnya' : (d >= 0 ? '▲ +' : '▼ ') + d.toFixed(1).replace('.', ',') + ' poin vs minggu lalu');
     const dl = pts(last.dsl, prev && prev.dsl), dc = pts(last.dslCust, prev && prev.dslCust);
     const tiles = el('div', {class: 'oc-row'},
-      big('Minggu terakhir', int(last.total) + ' NP', weekLabel(last.key) + (last.days < 7 ? ' · ' + last.days + ' hari data' : '')),
+      big('Minggu terakhir', int(last.total) + ' NP', weekLabel(last.key) + (last.days < weekSpan(last.key) ? ' · ' + last.days + ' dari ' + weekSpan(last.key) + ' hari ada data' : '')),
       big('DSL', pct(last.dsl), dTxt(dl), dl != null && dl < 0 ? 'down' : ''),
       big('RC dan AMSEN', '+' + int(last.oc), 'NP Late/OTS dari sisi customer', 'cust'),
       big('DSL Customer', pct(last.dslCust), dTxt(dc), 'main' + (dc != null && dc < 0 ? ' down' : '')));
     const tbl = el('table', {class: 'oc-t'},
-      el('thead', {}, el('tr', {}, ...['Minggu (Min–Sab)', 'Total NP', 'On time', 'Early', 'Late', 'Outstanding', 'DSL', 'RC dan AMSEN', 'DSL Customer'].map((h) => el('th', {textContent: h})))),
+      el('thead', {}, el('tr', {}, ...['Minggu (Sen–Min, per bulan)', 'Total NP', 'On time', 'Early', 'Late', 'Outstanding', 'DSL', 'RC dan AMSEN', 'DSL Customer'].map((h) => el('th', {textContent: h})))),
       el('tbody', {}, ...[...w].reverse().map((r) => el('tr', {},
-        el('td', {class: 'nw'}, weekLabel(r.key), r.days < 7 ? el('small', {class: 'note', style: 'display:block;margin:0', textContent: r.days + ' hari ada data'}) : null),
+        el('td', {class: 'nw'}, weekLabel(r.key), el('small', {class: 'note', style: 'display:block;margin:0', textContent: weekSpan(r.key) + ' hari' + (weekSpan(r.key) < 7 ? ' (dipotong batas bulan)' : '') + (r.days < weekSpan(r.key) ? ' · ' + r.days + ' hari ada data' : '')})),
         el('td', {class: 'num', textContent: int(r.total)}), el('td', {class: 'num', textContent: int(r.ontime)}), el('td', {class: 'num', textContent: int(r.early)}),
         el('td', {class: 'num', style: r.late ? 'color:var(--late);font-weight:700' : '', textContent: int(r.late)}),
         el('td', {class: 'num', style: r.ots ? 'color:var(--ots);font-weight:700' : '', textContent: int(r.ots)}),
@@ -1011,7 +1033,7 @@ var SB_KEY = "sb_publishable_KiSRfZUjVh1jW2kai0O0_Q_ZWn4oXT_";
       bars.append(el('div', {class: 'r'}, el('div', {class: 'r-name'}, weekLabel(r.key), el('small', {class: 'num', textContent: int(r.total) + ' NP · ' + (r.miss ? int(r.miss) + ' Late' : 'semua tercapai')})), bar, v));
     }
     card.replaceChildren(
-      el('div', {}, el('h2', {textContent: 'Analisa Kiriman per Minggu'}), el('p', {class: 'note', textContent: 'Dikelompokkan per minggu tanggal janji kirim, dari hari Minggu sampai Sabtu. DSL Customer menghitung RC dan AMSEN sebagai tercapai.'})),
+      el('div', {}, el('h2', {textContent: 'Analisa Kiriman per Minggu'}), el('p', {class: 'note', textContent: 'Dikelompokkan per minggu tanggal janji kirim, Senin sampai Minggu, dengan cut off per bulan: Week 1 dimulai tanggal 1 sampai hari Minggu pertama, dan minggu terakhir berhenti di akhir bulan. DSL Customer menghitung RC dan AMSEN sebagai tercapai.'})),
       tiles, bars, el('div', {class: 'tablewrap', style: 'max-height:none'}, tbl));
   };
 
@@ -1019,32 +1041,36 @@ var SB_KEY = "sb_publishable_KiSRfZUjVh1jW2kai0O0_Q_ZWn4oXT_";
     const card = $('#rb-card');
     const fails = us.filter((u) => (u.status === 'LATE' || u.status === 'OTS') && !isOC(u));
     const ocN = us.filter(isOC).length;
-    const gr = failGroups(fails, reasonKey), gb = failGroups(fails, brandOf);
+    /* Per Reason: semua kategori (tidak diubah). Per Master Brand: hanya Reason TBSPL dan TBDC. */
+    const BRAND_CATS = ['TBSPL', 'TBDC'];
+    const fb = fails.filter((u) => BRAND_CATS.includes(reasonKey(u)));
+    const gr = failGroups(fails, reasonKey), gb = failGroups(fb, brandOf);
     const lr = el('div', {class: 'rows'}), lb = el('div', {class: 'rows'});
     const head = el('div', {}, el('h2', {textContent: 'Analisa Late & Outstanding per Reason dan Master Brand'}),
       el('p', {class: 'note', textContent: int(fails.length) + ' NP Late/Outstanding pada filter ini, tanpa RC dan AMSEN' + (ocN ? ' (' + int(ocN) + ' NP dikeluarkan)' : '') + '. Angka = jumlah NP, persentase = porsi dari total NP Late. Reason dan Master Brand bisa diisi di tab NP Late & Outstanding.'}));
     const legend = el('div', {class: 'legend'}, el('span', {}, el('i', {class: 'sw', style: 'background:var(--late)'}), 'Late'), el('span', {}, el('i', {class: 'sw', style: 'background:var(--ots)'}), 'Outstanding'));
     const cols = el('div', {class: 'grid2', style: 'gap:28px'},
       el('div', {}, el('h3', {class: 'h3', textContent: 'Per Reason'}), lr),
-      el('div', {}, el('h3', {class: 'h3', textContent: 'Per Master Brand'}), lb));
+      el('div', {}, el('h3', {class: 'h3', textContent: 'Per Master Brand'}), el('p', {class: 'note', style: 'margin:-4px 0 8px', textContent: 'Hanya NP dengan Reason TBSPL dan TBDC (' + int(fb.length) + ' NP). Persentase = porsi dari NP Late TBSPL + TBDC.'}), lb));
     card.replaceChildren(head, legend, cols);
-    renderFailList(lr, gr, fails.length); renderFailList(lb, gb, fails.length);
+    renderFailList(lr, gr, fails.length);
+    if (fb.length) renderFailList(lb, gb, fb.length); else lb.append(el('div', {class: 'empty', textContent: 'Belum ada NP Late/Outstanding dengan Reason TBSPL atau TBDC pada filter ini.'}));
     /* matrix */
     const brands = gb.filter((x) => x.key !== NONE);
-    if (!fails.length) return;
+    if (!fb.length) return;
     if (!brands.length) { card.append(el('div', {class: 'msg info', textContent: 'Master Brand belum diisi. Buka tab NP Late & Outstanding, buka kunci, lalu isi kolom Master Brand untuk melihat silang Reason × Master Brand.'})); return; }
     const top = brands.slice(0, 6).map((x) => x.key);
     const colKeys = [...top, ...(gb.length > top.length ? ['Lainnya'] : [])];
     const colOf = (u) => { const k = brandOf(u) || NONE; return top.includes(k) ? k : 'Lainnya'; };
     const cell = new Map();
-    for (const u of fails) { const k = (reasonKey(u) || NONE) + '\u0000' + colOf(u); cell.set(k, (cell.get(k) || 0) + 1); }
+    for (const u of fb) { const k = (reasonKey(u) || NONE) + '\u0000' + colOf(u); cell.set(k, (cell.get(k) || 0) + 1); }
     const mx = Math.max(...cell.values());
     const tbl = el('table', {class: 'oc-t mtx'},
       el('thead', {}, el('tr', {}, el('th', {textContent: 'Reason \\ Master Brand'}), ...colKeys.map((k) => el('th', {class: 'c', textContent: k === 'Lainnya' ? 'Lainnya / belum diisi' : k})), el('th', {class: 'c', textContent: 'Total'}))),
-      el('tbody', {}, ...gr.map((r) => el('tr', {}, el('td', {class: 'nw', textContent: r.key}),
+      el('tbody', {}, ...failGroups(fb, reasonKey).map((r) => el('tr', {}, el('td', {class: 'nw', textContent: r.key}),
         ...colKeys.map((k) => { const v = cell.get(r.key + '\u0000' + k) || 0; const t = el('td', {class: 'c num', textContent: v ? int(v) : '·'}); if (v) t.style.background = 'color-mix(in srgb, var(--ots) ' + Math.round(10 + 45 * v / mx) + '%, transparent)'; return t; }),
         el('td', {class: 'c num strong', textContent: int(r.total)})))));
-    card.append(el('div', {}, el('h3', {class: 'h3', textContent: 'Silang Reason × Master Brand'}), el('div', {class: 'tablewrap', style: 'max-height:none'}, tbl)));
+    card.append(el('div', {}, el('h3', {class: 'h3', textContent: 'Silang Reason × Master Brand (TBSPL dan TBDC)'}), el('div', {class: 'tablewrap', style: 'max-height:none'}, tbl)));
   };
 
   const brandCell = (u) => {
@@ -1098,8 +1124,23 @@ var SB_KEY = "sb_publishable_KiSRfZUjVh1jW2kai0O0_Q_ZWn4oXT_";
     $('#cm-kirim').textContent = int(byDate.filter((u) => cmOf(u).kirim).length);
     $('#cm-amsen').textContent = int(byDate.filter((u) => cmOf(u).amsen).length);
     const q = S.q;
+    /* isi pilihan filter kolom dari data yang ada (pilihan aktif tetap dipertahankan) */
+    const base = us.filter((u) => u.status === 'LATE' || u.status === 'OTS');
+    const fillSel = (sel, vals, cur) => {
+      const opts = [''].concat(vals); if (cur && !opts.includes(cur)) opts.push(cur);
+      sel.replaceChildren(...opts.map((v) => el('option', {value: v, textContent: v === '' ? 'Semua' : v === '(belum diisi)' ? 'Belum diisi' : v})));
+      sel.value = cur;
+    };
+    const rc = new Set(base.map((u) => { const x = reasonOf(u); return x ? catOfText(x) : '(belum diisi)'; }));
+    fillSel($('#ff-r'), [...REASON_CATS, 'Lainnya', '(belum diisi)'].filter((k) => rc.has(k)), S.fr);
+    const bs = new Set(base.map((u) => brandOf(u) || '(belum diisi)'));
+    fillSel($('#ff-b'), [...[...bs].filter((k) => k !== '(belum diisi)').sort(), ...(bs.has('(belum diisi)') ? ['(belum diisi)'] : [])], S.fb);
+    $('#ff-x').hidden = !(S.fr || S.fd || S.fb);
     const rows = us.filter((u) => u.status === 'LATE' || u.status === 'OTS')
       .filter((u) => S.f === 'all' || u.status === S.f)
+      .filter((u) => { if (!S.fr) return true; const x = reasonOf(u); const cat = x ? catOfText(x) : '(belum diisi)'; return cat === S.fr; })
+      .filter((u) => { if (!S.fd) return true; const d = (detailOf(u) || '').trim(); return S.fd === '(kosong)' ? !d : d.toLowerCase().includes(S.fd); })
+      .filter((u) => { if (!S.fb) return true; const v = brandOf(u) || '(belum diisi)'; return v === S.fb; })
       .filter((u) => !q || [u.np, u.fail.map((f) => f.ic + ' ' + f.item).join(' '), u.comment.join(' '), u.type, reasonOf(u), catOfText(reasonOf(u)), detailOf(u), brandOf(u)].join(' ').toLowerCase().includes(q))
       .sort((a, b2) => (a.pd < b2.pd ? -1 : a.pd > b2.pd ? 1 : RANK[a.status] - RANK[b2.status]));
     S.lastRows = rows;
@@ -1520,6 +1561,10 @@ var SB_KEY = "sb_publishable_KiSRfZUjVh1jW2kai0O0_Q_ZWn4oXT_";
     catch (e) { if (e && e.code === 'declined') box.hidden = true; else flash(box, 'err', 'File tidak bisa disimpan di tampilan ini.'); }
   });
   $('#q').addEventListener('input', (e) => { S.q = e.target.value.trim().toLowerCase(); renderTable(); });
+  $('#ff-r').addEventListener('change', (e) => { S.fr = e.target.value; renderTable(); });
+  $('#ff-b').addEventListener('change', (e) => { S.fb = e.target.value; renderTable(); });
+  $('#ff-d').addEventListener('input', (e) => { S.fd = e.target.value.trim().toLowerCase(); renderTable(); });
+  $('#ff-x').addEventListener('click', () => { S.fr = ''; S.fd = ''; S.fb = ''; $('#ff-d').value = ''; renderTable(); });
 
   /* ===== template + column guide ===== */
   const HEADERS = ['Store No', 'Store Name', 'RM', 'DNNo', '', 'Type NP', 'NPNo', 'Cust Name', 'Phone Number', 'Item Code', 'Item Name', 'UOM', 'Qty NP', 'Order Date', 'Promised Delivery Date', 'Posting Date', 'Close Date', 'STATUS DSL', 'Sales Person', 'Sales Person Name', 'Comment', '', 'Amsen', 'Day', 'Delivery Parameter', 'Reason', 'Detail Reason'];
