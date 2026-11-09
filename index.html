@@ -146,6 +146,8 @@ h1 { margin: 2px 0 0; font-family: var(--f-num); font-weight: 400; font-size: cl
 .wa-ctl label { display: flex; flex-direction: column; gap: 3px; font-size: 12px; color: var(--muted); font-weight: 600; }
 .wa-ctl input, .wa-ctl select, .wa-ctl textarea { padding: 7px 9px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); color: var(--fg); font: inherit; font-size: 14px; }
 .wa-ctl .wa-foot { flex: 1; min-width: 240px; } .wa-ctl textarea { resize: vertical; }
+.rw-man input { width: 130px; background: #fff3b0 !important; border-color: #e0b400 !important; color: #3d3200 !important; }
+.rw-man input::placeholder { color: #8a7a2e; } .rw-man label:last-child input { width: 180px; }
 .wa-wrap { background: #e5ddd5; border-radius: 12px; padding: 18px; }
 .wa-bubble { margin: 0; max-width: 520px; background: #dcf8c6; color: #111b21; border-radius: 10px 10px 2px 10px; padding: 12px 14px; font: 14.5px/1.5 "Segoe UI", system-ui, sans-serif; white-space: pre-wrap; word-break: break-word; box-shadow: 0 1px 1px rgba(0,0,0,.12); margin-left: auto; }
 #wa-send { text-decoration: none; } #wa-msg.ok { color: var(--ok); } #wa-msg.err { color: var(--bad, #c8372d); }
@@ -523,7 +525,7 @@ td.empty-cell { text-align: center; color: var(--muted); padding: 24px; }
   <!-- TAB REPORT WA -->
   <section class="page" id="wa" role="tabpanel" aria-labelledby="tab-wa" hidden>
     <section class="card">
-      <div><h2>Report WA</h2><p class="note">Teks report DSL harian untuk dikirim ke WhatsApp. Angka terisi otomatis dari data (NP unik dengan Promised Delivery Date = tanggal report) dan ikut berubah setiap ada data baru. Filter di atas tidak dipakai di tab ini.</p></div>
+      <div><h2>REPORT DSL WA</h2><p class="note">Teks report DSL harian untuk dikirim ke WhatsApp. Angka terisi otomatis dari data (NP unik dengan Promised Delivery Date = tanggal report) dan ikut berubah setiap ada data baru. PDD, OT, dan Contribusi hanya menghitung NP dengan Comment <b>Kirim</b>; Late dan Reason Late menghitung semua NP tanggal tersebut. Filter di atas tidak dipakai di tab ini.</p></div>
       <div class="wa-ctl">
         <label>Tanggal report (PDD)<input type="date" id="wa-date"></label>
         <label>Salam<select id="wa-greet"><option value="">Otomatis (sesuai jam)</option><option>Selamat Pagi</option><option>Selamat Siang</option><option>Selamat Sore</option><option>Selamat Malam</option></select></label>
@@ -531,6 +533,21 @@ td.empty-cell { text-align: center; color: var(--muted); padding: 24px; }
       </div>
       <div class="wa-wrap"><pre class="wa-bubble" id="wa-text"></pre></div>
       <div class="actions"><button class="btn primary" id="wa-copy" type="button">Salin teks</button><a class="btn" id="wa-send" target="_blank" rel="noopener">Kirim lewat WhatsApp</a><span class="cap-msg" id="wa-msg" role="status"></span></div>
+    </section>
+    <section class="card">
+      <div><h2>REPORT RITASE WA</h2><p class="note">Dari file <b>Daily Delivery Confirmation Report WMSME AND SCALE</b> (upload di tab Data &amp; Upload). Bagian <b>DN</b> dihitung otomatis per <b>Departure Date</b>, hanya Order Type <b>SalesOrder</b> dan <b>SalesNote</b>, Destination Name <b>MITRA10 PERCETAKAN NEGARA</b>, Transporter <b>ASG</b> dan <b>Ken Logistik</b>: Total CP/Ritase = Delivery Order No unik, Total LM = Load Manifest No unik, Total DN = TR No unik. Kolom <span style="background:#fff3b0;padding:0 4px;border-radius:4px;color:#3d3200">kuning</span> diisi manual (tersimpan per tanggal di browser ini).</p></div>
+      <div class="wa-ctl"><label>Tanggal (Departure Date)<input type="date" id="rw-date"></label><span class="note" id="rw-info" style="margin:0"></span></div>
+      <div class="wa-ctl rw-man">
+        <label>TR · Total CP/Ritase<input type="number" min="0" inputmode="numeric" data-rm="trCp"></label>
+        <label>TR · Total cabang<input type="number" min="0" inputmode="numeric" data-rm="trCab"></label>
+        <label>TO · Total CP/Ritase<input type="number" min="0" inputmode="numeric" data-rm="toCp"></label>
+        <label>TO · Total cabang<input type="number" min="0" inputmode="numeric" data-rm="toCab"></label>
+        <label>Total unit<input type="number" min="0" inputmode="numeric" data-rm="unit"></label>
+        <label>Unit terpakai<input type="number" min="0" inputmode="numeric" data-rm="used"></label>
+        <label>Keterangan unit (opsional)<input type="text" placeholder="mis. 1 Perbaikan" data-rm="usedNote"></label>
+      </div>
+      <div class="wa-wrap"><pre class="wa-bubble" id="rw-text"></pre></div>
+      <div class="actions"><button class="btn primary" id="rw-copy" type="button">Salin teks</button><a class="btn" id="rw-send" target="_blank" rel="noopener" style="text-decoration:none">Kirim lewat WhatsApp</a><span class="cap-msg" id="rw-msg" role="status"></span></div>
     </section>
   </section>
 
@@ -542,7 +559,7 @@ td.empty-cell { text-align: center; color: var(--muted); padding: 24px; }
       <div class="drop" id="drop" role="button" tabindex="0" aria-label="Pilih atau tarik file ke sini">
         <div class="drop-ico" aria-hidden="true"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4"/><path d="m6 10 6-6 6 6"/><path d="M4 20h16"/></svg></div>
         <strong>Tarik file ke sini, atau klik untuk memilih</strong>
-        <span>.xlsx, .xls, atau .csv · maks 20 MB</span>
+        <span>.xlsx, .xls, atau .csv · maks 20 MB · file Daily Delivery Confirmation Report (ritase) juga bisa diupload di sini</span>
         <input type="file" id="file" accept=".xlsx,.xls,.csv" hidden>
       </div>
       <div id="up-msg" hidden></div>
@@ -632,7 +649,7 @@ var SB_KEY = "sb_publishable_KiSRfZUjVh1jW2kai0O0_Q_ZWn4oXT_";
   ];
 
   /* ===== state ===== */
-  const S = {uploads: [], chunks: new Map(), rows: [], units: [], from: '', to: '', months: [], tab: 'ringkasan', f: 'all', cm: 'all', lastRows: [], reasons: new Map(), brands: new Map(), unlocked: false, ocShow: false /* rincian per tanggal janji tersembunyi; dibuka bila perlu */, fr: '', fd: '', fb: '', q: '', loaded: false, dbNull: false, pending: null};
+  const S = {uploads: [], chunks: new Map(), rows: [], units: [], from: '', to: '', months: [], ritase: new Map(), tab: 'ringkasan', f: 'all', cm: 'all', lastRows: [], reasons: new Map(), brands: new Map(), unlocked: false, ocShow: false /* rincian per tanggal janji tersembunyi; dibuka bila perlu */, fr: '', fd: '', fb: '', q: '', loaded: false, dbNull: false, pending: null};
   let db = null, user = null, me = null, downloads = null, canWrite = false, canDelete = false, PIN = '';
 
   /* ===== tabs ===== */
@@ -1470,14 +1487,14 @@ var SB_KEY = "sb_publishable_KiSRfZUjVh1jW2kai0O0_Q_ZWn4oXT_";
   const greetAuto = () => { const h = new Date().getHours(); return h >= 4 && h < 10 ? 'Selamat Pagi' : h < 15 && h >= 10 ? 'Selamat Siang' : h >= 15 && h < 18 ? 'Selamat Sore' : 'Selamat Malam'; };
   const waText = () => {
     const d = W.date; if (!d) return 'Belum ada data.';
-    const us = S.units.filter((u) => u.pd === d), c = count(us), [y, m, dd] = dp(d);
+    const all = S.units.filter((u) => u.pd === d), us = all.filter((u) => cmOf(u).kirim), c = count(us), [y, m, dd] = dp(d); /* PDD, OT & Contribusi: hanya NP Comment "Kirim" */
     const L = [];
     L.push(($('#wa-greet').value || greetAuto()) + ' Berikut Reports DSL Mitra 10 Percetakan Negara');
     L.push('Tgl ' + dd + ' ' + BLN_L[m - 1] + ' ' + y, '');
     L.push('PDD = ' + c.total);
     L.push('OT = ' + c.ok + ' (' + p2f(c.ok, c.total) + ')', '');
-    const late = us.filter((u) => u.status === 'LATE' || u.status === 'OTS');
-    L.push('Late = ' + (late.length ? late.length + ' (' + p2f(late.length, c.total) + ')' : ''));
+    const late = all.filter((u) => u.status === 'LATE' || u.status === 'OTS'); /* Late & Reason: semua NP tanggal tsb */
+    L.push('Late = ' + (late.length ? late.length + ' (' + p2f(late.length, all.length) + ')' : ''));
     const rc = new Map(); for (const u of late) { const k = catOfText(reasonOf(u)); rc.set(k, (rc.get(k) || 0) + 1); }
     L.push('Reason Late = ' + [...rc].sort((a, b) => b[1] - a[1]).map(([k, v]) => k + ' ' + v + ' NP').join(', '), '');
     L.push('Contribusi:');
@@ -1504,7 +1521,77 @@ var SB_KEY = "sb_publishable_KiSRfZUjVh1jW2kai0O0_Q_ZWn4oXT_";
     m.className = 'cap-msg ' + (ok ? 'ok' : 'err'); m.textContent = ok ? 'Teks tersalin. Tempel di WhatsApp.' : 'Gagal menyalin, blok teks lalu salin manual.'; setTimeout(() => { m.textContent = ''; }, 4000);
   });
 
-  const renderAll = () => { renderHeader(); renderSummary(); renderSumDsl(); renderTable(); renderAllData(); renderHistory(); renderWA(); };
+  /* ===== REPORT RITASE WA ===== */
+  const RIT = {types: ['salesorder', 'salesnote'], dest: 'MITRA10 PERCETAKAN NEGARA', trans: [['ASG', 'asg'], ['Ken Logistik', 'ken logistik']]};
+  const MON3 = {jan: 1, feb: 2, mar: 3, apr: 4, may: 5, mei: 5, jun: 6, jul: 7, aug: 8, agu: 8, sep: 9, oct: 10, okt: 10, nov: 11, dec: 12, des: 12};
+  const ritDate = (v) => {
+    if (v instanceof Date && !isNaN(v)) return isoOf(Date.UTC(v.getFullYear(), v.getMonth(), v.getDate()));
+    const t = String(v || '').trim(); let m = t.match(/^(\d{1,2})[-\s/]([A-Za-z]{3})[a-z]*[-\s/](\d{2,4})/);
+    if (m && MON3[m[2].toLowerCase()]) { let y = +m[3]; if (y < 100) y += 2000; return y + '-' + String(MON3[m[2].toLowerCase()]).padStart(2, '0') + '-' + String(+m[1]).padStart(2, '0'); }
+    m = t.match(/^(\d{4})-(\d\d)-(\d\d)/); if (m) return m[1] + '-' + m[2] + '-' + m[3];
+    m = t.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})/); if (m) { let y = +m[3]; if (y < 100) y += 2000; return y + '-' + String(+m[2]).padStart(2, '0') + '-' + String(+m[1]).padStart(2, '0'); }
+    return '';
+  };
+  /* baca file Daily Delivery Confirmation Report; null bila bukan file ritase */
+  const ritParse = (wb) => {
+    const ws = wb.Sheets[wb.SheetNames[0]], rows = XLSX.utils.sheet_to_json(ws, {header: 1, raw: false, defval: ''});
+    let hi = -1; for (let i = 0; i < Math.min(rows.length, 30); i++) { const h = (rows[i] || []).map((x) => String(x).trim().toLowerCase()); if (h.includes('delivery order no') && h.includes('transporter') && h.includes('order type')) { hi = i; break; } }
+    if (hi < 0) return null;
+    const H = rows[hi].map((x) => String(x).trim().toLowerCase()), c = (n) => H.indexOf(n);
+    const cDo = c('delivery order no'), cTr = c('transporter'), cTy = c('order type'), cDe = c('destination name'), cDd = c('departure date'), cTrNo = c('tr no'), cLm = c('load manifest no');
+    if (cDd < 0) throw new Error('Kolom Departure Date tidak ditemukan.');
+    const by = new Map(); let n = 0, noDate = 0;
+    for (const r of rows.slice(hi + 1)) {
+      const doNo = String(r[cDo] || '').trim(); if (!doNo) continue; n++;
+      const d = ritDate(r[cDd]); if (!d) { noDate++; continue; }
+      if (!by.has(d)) by.set(d, []);
+      const ty = String(r[cTy] || '').trim().toLowerCase(), de = String(r[cDe] || '').trim().toUpperCase(), tr = String(r[cTr] || '').trim();
+      const tk = RIT.trans.find((t) => t[1] === tr.toLowerCase());
+      if (RIT.types.includes(ty) && de === RIT.dest && tk) by.get(d).push([doNo, tk[0], String(r[cTy]).trim(), cTrNo >= 0 ? String(r[cTrNo] || '').trim() : '', cLm >= 0 ? String(r[cLm] || '').trim() : '']);
+    }
+    return {by, n, noDate};
+  };
+  const ritOf = (d) => { const o = S.ritase.get(d); return (o && o.rows) || []; };
+  const ritCount = (rows) => { const all = new Set(), per = {}; for (const [doNo, tr] of rows) { all.add(doNo); (per[tr] = per[tr] || new Set()).add(doNo); } return {total: all.size, per}; };
+  const RW = {date: '', userPick: false};
+  /* isian manual per tanggal (disimpan di browser ini) */
+  const RM_KEY = 'dsl_rit_manual';
+  const rmAll = () => { try { return JSON.parse(localStorage.getItem(RM_KEY) || '{}') || {}; } catch (e) { return {}; } };
+  const rmGet = (d) => rmAll()[d] || {};
+  const rmSet = (d, k, v) => { const a = rmAll(); a[d] = Object.assign({}, a[d], {[k]: v}); try { localStorage.setItem(RM_KEY, JSON.stringify(a)); } catch (e) {} };
+  const nz = (v) => (v === '' || v == null || isNaN(+v) ? 0 : +v);
+  const rwText = () => {
+    const d = RW.date; if (!d) return 'Belum ada data ritase. Upload file Daily Delivery Confirmation Report di tab Data & Upload.';
+    const [y, m, dd] = dp(d), rows = ritOf(d), M = rmGet(d);
+    const uq = (i) => new Set(rows.map((r) => r[i]).filter(Boolean)).size;
+    const dnCp = uq(0), dn = uq(3), lm = uq(4);
+    const total = dnCp + nz(M.trCp) + nz(M.toCp);
+    const L = ['Berikut Report Closing', 'DN/TO/TR Mitra 10 Percetakan Negara', 'Tgl ' + dd + ' ' + BLN_L[m - 1] + ' ' + y, '',
+      'DN', 'Total CP/Ritase = ' + dnCp, 'Total LM = ' + lm, 'Total DN = ' + dn, '',
+      'TR', 'Total CP/Ritase = ' + nz(M.trCp), 'Total cabang = ' + nz(M.trCab), '',
+      'TO', 'Total CP/Ritase = ' + nz(M.toCp), 'Total cabang = ' + nz(M.toCab), '',
+      'Total unit = ' + nz(M.unit), 'Unit Terpakai = ' + nz(M.used) + (String(M.usedNote || '').trim() ? ' (' + String(M.usedNote).trim() + ')' : ''), 'Total CP/ Ritase = ' + total, '',
+      'Terima kasih 🙏🏻'];
+    return L.join('\n');
+  };
+  const renderRit = () => {
+    const dates = [...S.ritase.keys()].sort(), t = todayISO();
+    if (!RW.date || (!RW.userPick && dates.length && !dates.includes(RW.date))) { const past = dates.filter((x) => x <= t); RW.date = dates.includes(t) ? t : past.length ? past[past.length - 1] : dates[dates.length - 1] || ''; }
+    const di = $('#rw-date'); if (document.activeElement !== di) di.value = RW.date;
+    const M = rmGet(RW.date); for (const inp of $$('[data-rm]')) if (document.activeElement !== inp) inp.value = M[inp.dataset.rm] == null ? '' : M[inp.dataset.rm];
+    $('#rw-info').textContent = dates.length ? 'Data ritase tersedia ' + dDate(dates[0]) + ' – ' + dDate(dates[dates.length - 1], true) : 'Belum ada data ritase.';
+    const txt = rwText(); $('#rw-text').textContent = txt; $('#rw-send').href = 'https://wa.me/?text=' + encodeURIComponent(txt);
+  };
+  $('#rw-date').addEventListener('change', (e) => { if (/^\d{4}-\d\d-\d\d$/.test(e.target.value)) { RW.date = e.target.value; RW.userPick = true; renderRit(); } });
+  $('#rw-copy').addEventListener('click', async () => {
+    const txt = $('#rw-text').textContent, m = $('#rw-msg');
+    let ok = false; try { await navigator.clipboard.writeText(txt); ok = true; } catch (e) {
+      const ta = el('textarea', {value: txt, style: 'position:fixed;left:-9999px'}); document.body.append(ta); ta.select(); try { ok = document.execCommand('copy'); } catch (x) {} ta.remove(); }
+    m.className = 'cap-msg ' + (ok ? 'ok' : 'err'); m.textContent = ok ? 'Teks tersalin. Tempel di WhatsApp.' : 'Gagal menyalin, blok teks lalu salin manual.'; setTimeout(() => { m.textContent = ''; }, 4000);
+  });
+  for (const inp of $$('[data-rm]')) inp.addEventListener('input', () => { if (!RW.date) return; rmSet(RW.date, inp.dataset.rm, inp.value); renderRit(); });
+
+  const renderAll = () => { renderHeader(); renderSummary(); renderSumDsl(); renderTable(); renderAllData(); renderHistory(); renderWA(); renderRit(); };
 
   /* ===== filters ===== */
   for (const [id, key] of [['#f-from', 'from'], ['#f-to', 'to']]) {
@@ -1753,6 +1840,17 @@ var SB_KEY = "sb_publishable_KiSRfZUjVh1jW2kai0O0_Q_ZWn4oXT_";
     flash(msg, 'info', 'Membaca ' + file.name + '…');
     await new Promise((r) => setTimeout(r, 30));
     try {
+      if (!/\.csv$/i.test(file.name)) {
+        const rit = ritParse(XLSX.read(await file.arrayBuffer(), {type: 'array'}));
+        if (rit) {
+          const ds = [...rit.by.keys()].sort(); if (!ds.length) throw new Error('Tidak ada baris dengan Departure Date di file ritase ini.');
+          flash(msg, 'info', 'Menyimpan data ritase ' + ds.length + ' tanggal…');
+          for (const d of ds) await db.doc('ritase/' + d).set({rows: rit.by.get(d), file: file.name, at: new Date().toISOString()});
+          const tot = ds.reduce((a, d) => a + ritCount(rit.by.get(d)).total, 0);
+          flash(msg, 'ok', '✓ Data ritase tersimpan: ' + dDate(ds[0]) + ' – ' + dDate(ds[ds.length - 1], true) + ' (' + ds.length + ' tanggal, ' + int(tot) + ' DO sesuai kriteria ritase' + (rit.noDate ? ', ' + int(rit.noDate) + ' baris tanpa Departure Date dilewati' : '') + '). Lihat di tab REPORT WA.');
+          fileIn.value = ''; return;
+        }
+      }
       const res = await parseFile(file);
       const s1 = new Map(), s2 = new Map();
       const existing = new Set(S.rows.map((r) => rowKey(r, s1)));
@@ -1986,6 +2084,10 @@ var SB_KEY = "sb_publishable_KiSRfZUjVh1jW2kai0O0_Q_ZWn4oXT_";
     db.collection('brands').limit(1000).onSnapshot((snap) => {
       S.brands = new Map(snap.docs.map((d) => [d.id, d.data() || {}]));
       if (S.loaded) scheduleRender(false);
+    }, () => {});
+    db.collection('ritase').limit(1000).onSnapshot((snap) => {
+      S.ritase = new Map(snap.docs.map((d) => [d.id, d.data() || {}]));
+      renderRit();
     }, () => {});
     db.collection('reasons').limit(1000).onSnapshot((snap) => {
       S.reasons = new Map(snap.docs.map((d) => [d.id, d.data() || {}]));
