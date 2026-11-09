@@ -148,6 +148,7 @@ h1 { margin: 2px 0 0; font-family: var(--f-num); font-weight: 400; font-size: cl
 .wa-ctl .wa-foot { flex: 1; min-width: 240px; } .wa-ctl textarea { resize: vertical; }
 .rw-man input { width: 130px; background: #fff3b0 !important; border-color: #e0b400 !important; color: #3d3200 !important; }
 .rw-man input::placeholder { color: #8a7a2e; } .rw-man label:last-child input { width: 180px; }
+#up-msg { white-space: pre-line; }
 .wa-wrap { background: #e5ddd5; border-radius: 12px; padding: 18px; }
 .wa-bubble { margin: 0; max-width: 520px; background: #dcf8c6; color: #111b21; border-radius: 10px 10px 2px 10px; padding: 12px 14px; font: 14.5px/1.5 "Segoe UI", system-ui, sans-serif; white-space: pre-wrap; word-break: break-word; box-shadow: 0 1px 1px rgba(0,0,0,.12); margin-left: auto; }
 #wa-send { text-decoration: none; } #wa-msg.ok { color: var(--ok); } #wa-msg.err { color: var(--bad, #c8372d); }
@@ -525,7 +526,7 @@ td.empty-cell { text-align: center; color: var(--muted); padding: 24px; }
   <!-- TAB REPORT WA -->
   <section class="page" id="wa" role="tabpanel" aria-labelledby="tab-wa" hidden>
     <section class="card">
-      <div><h2>REPORT DSL WA</h2><p class="note">Teks report DSL harian untuk dikirim ke WhatsApp. Angka terisi otomatis dari data (NP unik dengan Promised Delivery Date = tanggal report) dan ikut berubah setiap ada data baru. PDD, OT, dan Contribusi hanya menghitung NP dengan Comment <b>Kirim</b>; Late dan Reason Late menghitung semua NP tanggal tersebut. Filter di atas tidak dipakai di tab ini.</p></div>
+      <div><h2>REPORT DSL WA</h2><p class="note">Teks report DSL harian untuk dikirim ke WhatsApp. Angka terisi otomatis dari data (NP unik dengan Promised Delivery Date = tanggal report) dan ikut berubah setiap ada data baru. PDD, OT, dan Contribusi hanya menghitung NP dengan Comment <b>Kirim</b>; Contribusi = porsi Sameday/Next Day/2 Days/&gt;2 Days dari NP <b>OT</b>. Late dan Reason Late menghitung semua NP tanggal tersebut, tanpa NP dengan reason <b>RC &amp; AMSEN</b>. Filter di atas tidak dipakai di tab ini.</p></div>
       <div class="wa-ctl">
         <label>Tanggal report (PDD)<input type="date" id="wa-date"></label>
         <label>Salam<select id="wa-greet"><option value="">Otomatis (sesuai jam)</option><option>Selamat Pagi</option><option>Selamat Siang</option><option>Selamat Sore</option><option>Selamat Malam</option></select></label>
@@ -558,9 +559,9 @@ td.empty-cell { text-align: center; color: var(--muted); padding: 24px; }
       <div id="up-blocked" class="msg info" hidden></div>
       <div class="drop" id="drop" role="button" tabindex="0" aria-label="Pilih atau tarik file ke sini">
         <div class="drop-ico" aria-hidden="true"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4"/><path d="m6 10 6-6 6 6"/><path d="M4 20h16"/></svg></div>
-        <strong>Tarik file ke sini, atau klik untuk memilih</strong>
+        <strong>Tarik file ke sini, atau klik untuk memilih (bisa beberapa file sekaligus)</strong>
         <span>.xlsx, .xls, atau .csv · maks 20 MB · file Daily Delivery Confirmation Report (ritase) juga bisa diupload di sini</span>
-        <input type="file" id="file" accept=".xlsx,.xls,.csv" hidden>
+        <input type="file" id="file" accept=".xlsx,.xls,.csv" multiple hidden>
       </div>
       <div id="up-msg" hidden></div>
       <div id="preview" hidden>
@@ -1493,13 +1494,14 @@ var SB_KEY = "sb_publishable_KiSRfZUjVh1jW2kai0O0_Q_ZWn4oXT_";
     L.push('Tgl ' + dd + ' ' + BLN_L[m - 1] + ' ' + y, '');
     L.push('PDD = ' + c.total);
     L.push('OT = ' + c.ok + ' (' + p2f(c.ok, c.total) + ')', '');
-    const late = all.filter((u) => u.status === 'LATE' || u.status === 'OTS'); /* Late & Reason: semua NP tanggal tsb */
-    L.push('Late = ' + (late.length ? late.length + ' (' + p2f(late.length, all.length) + ')' : ''));
+    const late = all.filter((u) => (u.status === 'LATE' || u.status === 'OTS') && !isOC(u)); /* Late & Reason: semua NP tanggal tsb, tanpa RC & AMSEN */
+    L.push('Late = ' + (late.length ? late.length + ' (' + p2f(late.length, c.total) + ')' : ''));
     const rc = new Map(); for (const u of late) { const k = catOfText(reasonOf(u)); rc.set(k, (rc.get(k) || 0) + 1); }
     L.push('Reason Late = ' + [...rc].sort((a, b) => b[1] - a[1]).map(([k, v]) => k + ' ' + v + ' NP').join(', '), '');
     L.push('Contribusi:');
     const lab = {'Sameday': 'Sameday', 'Next Day': 'Next Day', '2 Days': '2 Days', 'Up 2 Days': '>2 Days', 'Tidak diketahui': 'Tidak diketahui'};
-    for (const k of PORDER) { const v = us.filter((u) => u.param === k).length; if (k === 'Tidak diketahui' && !v) continue; L.push(lab[k] + ' = ' + v + ' (' + p2f(v, c.total) + ')'); }
+    const ot = us.filter((u) => u.status === 'ONTIME' || u.status === 'EARLY'); /* Contribusi: dari NP OT */
+    for (const k of PORDER) { const v = ot.filter((u) => u.param === k).length; if (k === 'Tidak diketahui' && !v) continue; L.push(lab[k] + ' = ' + v + ' (' + p2f(v, ot.length) + ')'); }
     L.push('', W.foot);
     return L.join('\n');
   };
@@ -1829,56 +1831,72 @@ var SB_KEY = "sb_publishable_KiSRfZUjVh1jW2kai0O0_Q_ZWn4oXT_";
   /* ===== upload UI ===== */
   const drop = $('#drop'), fileIn = $('#file'), msg = $('#up-msg');
   const resetPreview = () => { S.pending = null; $('#preview').hidden = true; fileIn.value = ''; };
-  const handle = async (file) => {
+  const ritSave = async (rit, name) => {
+    const ds = [...rit.by.keys()].sort(); if (!ds.length) throw new Error('tidak ada baris dengan Departure Date di file ritase ini');
+    try { for (const d of ds) await db.doc('ritase/' + d).set({rows: rit.by.get(d), file: name, at: new Date().toISOString()}); }
+    catch (e) { if (/Koleksi tidak dikenal|check constraint|23514/i.test(e.message || '')) throw new Error('database belum siap menerima data ritase. Jalankan file update_supabase_dsl_ritase.sql sekali di Supabase (SQL Editor → New query → tempel → Run), lalu upload ulang'); throw e; }
+    const tot = ds.reduce((a, d) => a + ritCount(rit.by.get(d)).total, 0);
+    return '✓ ' + name + ' (Ritase): ' + dDate(ds[0]) + ' – ' + dDate(ds[ds.length - 1], true) + ', ' + ds.length + ' tanggal, ' + int(tot) + ' DO sesuai kriteria' + (rit.noDate ? ', ' + int(rit.noDate) + ' baris tanpa Departure Date dilewati' : '') + '. Lihat di tab REPORT WA.';
+  };
+  /* bisa beberapa file sekaligus: file ritase langsung disimpan; file DSL digabung ke satu preview */
+  const handleFiles = async (list) => {
+    const files = [...(list || [])].filter(Boolean); fileIn.value = '';
     resetPreview();
-    if (!file) return;
-    if (!canWrite) { askPin('Masukkan PIN edit untuk upload data.'); return; }
-    if (!/\.(xlsx|xls|csv)$/i.test(file.name)) { flash(msg, 'err', 'Format "' + file.name + '" tidak didukung. Gunakan .xlsx, .xls, atau .csv.'); return; }
-    if (file.size > 20 * 1024 * 1024) { flash(msg, 'err', 'File lebih dari 20 MB. Pecah menjadi beberapa file lalu upload satu per satu.'); return; }
+    if (!files.length) return;
+    if (!canWrite) { askPin('Masukkan PIN edit untuk upload data. File langsung diproses setelah PIN benar.', () => handleFiles(files)); return; }
     if (!window.XLSX) { flash(msg, 'err', 'Pembaca file Excel belum termuat. Muat ulang halaman lalu coba lagi.'); return; }
     if (!S.loaded) { flash(msg, 'info', 'Data dashboard masih dimuat. Tunggu sampai jumlah baris di atas muncul, lalu pilih file lagi.'); return; }
-    flash(msg, 'info', 'Membaca ' + file.name + '…');
-    await new Promise((r) => setTimeout(r, 30));
-    try {
-      if (!/\.csv$/i.test(file.name)) {
-        const rit = ritParse(XLSX.read(await file.arrayBuffer(), {type: 'array'}));
-        if (rit) {
-          const ds = [...rit.by.keys()].sort(); if (!ds.length) throw new Error('Tidak ada baris dengan Departure Date di file ritase ini.');
-          flash(msg, 'info', 'Menyimpan data ritase ' + ds.length + ' tanggal…');
-          for (const d of ds) await db.doc('ritase/' + d).set({rows: rit.by.get(d), file: file.name, at: new Date().toISOString()});
-          const tot = ds.reduce((a, d) => a + ritCount(rit.by.get(d)).total, 0);
-          flash(msg, 'ok', '✓ Data ritase tersimpan: ' + dDate(ds[0]) + ' – ' + dDate(ds[ds.length - 1], true) + ' (' + ds.length + ' tanggal, ' + int(tot) + ' DO sesuai kriteria ritase' + (rit.noDate ? ', ' + int(rit.noDate) + ' baris tanpa Departure Date dilewati' : '') + '). Lihat di tab REPORT WA.');
-          fileIn.value = ''; return;
+    const lines = [], dsl = [], names = []; let bad = false;
+    for (const file of files) {
+      if (!/\.(xlsx|xls|csv)$/i.test(file.name)) { bad = true; lines.push('✕ ' + file.name + ': format tidak didukung (gunakan .xlsx, .xls, atau .csv).'); continue; }
+      if (file.size > 20 * 1024 * 1024) { bad = true; lines.push('✕ ' + file.name + ': lebih dari 20 MB.'); continue; }
+      flash(msg, 'info', [...lines, 'Membaca ' + file.name + '…'].join('\n'));
+      await new Promise((r) => setTimeout(r, 30));
+      try {
+        if (!/\.csv$/i.test(file.name)) {
+          const rit = ritParse(XLSX.read(await file.arrayBuffer(), {type: 'array'}));
+          if (rit) { flash(msg, 'info', [...lines, 'Menyimpan data ritase ' + file.name + '…'].join('\n')); lines.push(await ritSave(rit, file.name)); continue; }
         }
-      }
-      const res = await parseFile(file);
-      const s1 = new Map(), s2 = new Map();
-      const existing = new Set(S.rows.map((r) => rowKey(r, s1)));
-      const replaced = res.rows.filter((r) => existing.has(rowKey(r, s2))).length;
-      const dates = res.rows.map((r) => r.pd).sort();
-      const nps = new Set(res.rows.map((r) => r.np)).size;
-      S.pending = {file: file.name, ...res, from: dates[0], to: dates[dates.length - 1]};
-      msg.hidden = true;
-      const st = (v, l) => el('div', {}, el('b', {class: 'num', textContent: v}), el('span', {textContent: l}));
-      $('#prev-stats').replaceChildren(
-        st(int(res.rows.length), 'baris item terbaca'), st(int(nps), 'NP unik'),
-        st(int(res.rows.length - replaced), 'baris baru'), st(int(replaced), 'menggantikan data lama'),
-        st(dDate(dates[0]) + ' – ' + dDate(dates[dates.length - 1], true), 'periode janji kirim'));
-      const w = [];
-      if (res.skip.np) w.push(int(res.skip.np) + ' baris dilewati karena NPNo kosong.');
-      if (res.skip.pd) w.push(int(res.skip.pd) + ' baris dilewati karena Promised Delivery Date kosong atau tidak terbaca.');
-      if (res.fixed.status) w.push('STATUS DSL dihitung otomatis untuk ' + int(res.fixed.status) + ' baris.');
-      if (res.fixed.param) w.push('Delivery Parameter dihitung otomatis untuk ' + int(res.fixed.param) + ' baris.');
-      $('#prev-warn').replaceChildren(...w.map((t) => el('li', {textContent: t})));
-      $('#preview').hidden = false;
-    } catch (e) { flash(msg, 'err', (e && e.message) || 'File tidak bisa dibaca.'); }
+        dsl.push(await parseFile(file)); names.push(file.name);
+      } catch (e) { bad = true; lines.push('✕ ' + file.name + ': ' + ((e && e.message) || 'file tidak bisa dibaca.')); }
+    }
+    if (!dsl.length) { flash(msg, bad ? 'err' : 'ok', lines.join('\n')); return; }
+    const res = {rows: [].concat(...dsl.map((r) => r.rows)), skip: {}, fixed: {}};
+    for (const r of dsl) { for (const k in r.skip) res.skip[k] = (res.skip[k] || 0) + r.skip[k]; for (const k in r.fixed) res.fixed[k] = (res.fixed[k] || 0) + r.fixed[k]; }
+    if (!res.rows.length) { lines.push('✕ ' + names.join(', ') + ': tidak ada baris data yang terbaca.'); flash(msg, 'err', lines.join('\n')); return; }
+    const s1 = new Map(), s2 = new Map();
+    const existing = new Set(S.rows.map((r) => rowKey(r, s1)));
+    const replaced = res.rows.filter((r) => existing.has(rowKey(r, s2))).length;
+    const dates = res.rows.map((r) => r.pd).sort();
+    const nps = new Set(res.rows.map((r) => r.np)).size;
+    S.pending = {file: names.join(' + '), ...res, from: dates[0], to: dates[dates.length - 1]};
+    if (lines.length) flash(msg, bad ? 'err' : 'ok', lines.join('\n') + '\nFile DSL: cek ringkasan di bawah lalu klik Simpan ke dashboard.'); else msg.hidden = true;
+    const st = (v, l) => el('div', {}, el('b', {class: 'num', textContent: v}), el('span', {textContent: l}));
+    $('#prev-stats').replaceChildren(
+      st(int(names.length), names.length > 1 ? 'file DSL digabung' : 'file DSL'),
+      st(int(res.rows.length), 'baris item terbaca'), st(int(nps), 'NP unik'),
+      st(int(res.rows.length - replaced), 'baris baru'), st(int(replaced), 'menggantikan data lama'),
+      st(dDate(dates[0]) + ' – ' + dDate(dates[dates.length - 1], true), 'periode janji kirim'));
+    const w = [];
+    if (names.length > 1) w.push('File: ' + names.join(', ') + '.');
+    if (res.skip.np) w.push(int(res.skip.np) + ' baris dilewati karena NPNo kosong.');
+    if (res.skip.pd) w.push(int(res.skip.pd) + ' baris dilewati karena Promised Delivery Date kosong atau tidak terbaca.');
+    if (res.fixed.status) w.push('STATUS DSL dihitung otomatis untuk ' + int(res.fixed.status) + ' baris.');
+    if (res.fixed.param) w.push('Delivery Parameter dihitung otomatis untuk ' + int(res.fixed.param) + ' baris.');
+    $('#prev-warn').replaceChildren(...w.map((t) => el('li', {textContent: t})));
+    $('#preview').hidden = false;
   };
+  const handle = (file) => handleFiles(file ? [file] : []);
   drop.addEventListener('click', () => fileIn.click());
   drop.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); fileIn.click(); } });
-  fileIn.addEventListener('change', () => handle(fileIn.files[0]));
+  fileIn.addEventListener('change', () => handleFiles(fileIn.files));
   for (const t of ['dragenter', 'dragover']) drop.addEventListener(t, (e) => { e.preventDefault(); drop.classList.add('over'); });
   for (const t of ['dragleave', 'drop']) drop.addEventListener(t, (e) => { e.preventDefault(); drop.classList.remove('over'); });
-  drop.addEventListener('drop', (e) => handle(e.dataTransfer && e.dataTransfer.files[0]));
+  drop.addEventListener('drop', (e) => handleFiles(e.dataTransfer && e.dataTransfer.files));
+  /* file yang ditarik ke mana saja di tab Data & Upload juga diterima */
+  const upPage = $('#upload');
+  for (const t of ['dragenter', 'dragover']) upPage.addEventListener(t, (e) => { if (e.dataTransfer && [...e.dataTransfer.types].includes('Files')) { e.preventDefault(); drop.classList.add('over'); } });
+  upPage.addEventListener('drop', (e) => { if (e.target.closest('#drop')) return; if (e.dataTransfer && e.dataTransfer.files.length) { e.preventDefault(); drop.classList.remove('over'); handleFiles(e.dataTransfer.files); } });
   $('#btn-cancel').addEventListener('click', () => { resetPreview(); msg.hidden = true; });
   $('#btn-save').addEventListener('click', async () => {
     const p = S.pending; if (!p || !db) return;
