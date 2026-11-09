@@ -44,7 +44,18 @@ h1 { margin: 2px 0 0; font-family: var(--f-num); font-weight: 400; font-size: cl
 .sub { margin: 4px 0 0; color: var(--muted); font-size: 13px; }
 .filter { display: flex; flex-wrap: wrap; gap: 8px; align-items: flex-end; background: var(--panel); border: 1px solid var(--line); border-radius: var(--r); padding: 10px 12px; box-shadow: var(--shadow); }
 .filter label { display: flex; flex-direction: column; gap: 3px; font-size: 12px; color: var(--muted); font-weight: 600; }
-.filter input { padding: 6px 8px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); }
+.filter input, .filter select { padding: 6px 8px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); color: var(--fg); font: inherit; font-size: 14px; }
+.filter select { min-width: 150px; }
+.ms { position: relative; }
+.ms summary { list-style: none; cursor: pointer; padding: 6px 28px 6px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); color: var(--fg); font-size: 14px; white-space: nowrap; min-width: 150px; position: relative; }
+.ms summary::-webkit-details-marker { display: none; }
+.ms summary::after { content: "▾"; position: absolute; right: 10px; color: var(--muted); }
+.ms[open] summary { border-color: var(--accent); }
+.ms-pop { position: absolute; z-index: 30; top: calc(100% + 4px); left: 0; min-width: 200px; background: var(--panel); color: var(--fg); border: 1px solid var(--line); border-radius: 10px; box-shadow: 0 8px 24px rgba(0,0,0,.18); padding: 8px; display: flex; flex-direction: column; gap: 2px; }
+.ms-pop label { display: flex !important; flex-direction: row !important; gap: 8px !important; align-items: center; padding: 6px 8px; border-radius: 6px; cursor: pointer; font-size: 13.5px !important; font-weight: 400 !important; color: var(--fg) !important; white-space: nowrap; }
+.ms-pop label:hover { background: var(--bg); }
+.ms-act { display: flex; gap: 6px; border-top: 1px solid var(--line); margin-top: 4px; padding-top: 6px; }
+.ms-act .btn { padding: 4px 10px; font-size: 12px; }
 #reset-key, .hkey { display: none !important; }
 #cloud-st { margin: 2px 0 0; font-size: 12px; font-weight: 600; display: flex; align-items: center; gap: 6px; }
 #cloud-st i { width: 8px; height: 8px; border-radius: 50%; display: inline-block; flex: none; }
@@ -127,6 +138,17 @@ h1 { margin: 2px 0 0; font-family: var(--f-num); font-weight: 400; font-size: cl
 .wrap .sd-t th.sd-first { border-left: 2px solid #ffffff; }
 .wrap .sd-t th.sd-rs { vertical-align: middle; }
 .sd-t td.sd-first { border-left: 2px solid var(--line); }
+.hist-card > summary { list-style: none; cursor: pointer; display: flex; justify-content: space-between; align-items: center; gap: 10px; font-size: 17px; }
+.hist-card > summary::-webkit-details-marker { display: none; }
+.hist-card .hist-tg { font-size: 13px; font-weight: 700; color: var(--accent); white-space: nowrap; }
+.hist-card[open] .hist-tg { font-size: 0; } .hist-card[open] .hist-tg::after { content: "Sembunyikan ▴"; font-size: 13px; }
+.wa-ctl { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end; }
+.wa-ctl label { display: flex; flex-direction: column; gap: 3px; font-size: 12px; color: var(--muted); font-weight: 600; }
+.wa-ctl input, .wa-ctl select, .wa-ctl textarea { padding: 7px 9px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); color: var(--fg); font: inherit; font-size: 14px; }
+.wa-ctl .wa-foot { flex: 1; min-width: 240px; } .wa-ctl textarea { resize: vertical; }
+.wa-wrap { background: #e5ddd5; border-radius: 12px; padding: 18px; }
+.wa-bubble { margin: 0; max-width: 520px; background: #dcf8c6; color: #111b21; border-radius: 10px 10px 2px 10px; padding: 12px 14px; font: 14.5px/1.5 "Segoe UI", system-ui, sans-serif; white-space: pre-wrap; word-break: break-word; box-shadow: 0 1px 1px rgba(0,0,0,.12); margin-left: auto; }
+#wa-send { text-decoration: none; } #wa-msg.ok { color: var(--ok); } #wa-msg.err { color: var(--bad, #c8372d); }
 .capbar { display: flex; justify-content: flex-end; align-items: center; gap: 10px; margin-bottom: -8px; }
 .capbar .cap-msg { font-size: 12.5px; font-weight: 600; }
 .capbar .cap-msg.ok { color: var(--ok); }
@@ -319,6 +341,7 @@ td.empty-cell { text-align: center; color: var(--muted); padding: 24px; }
     <div class="filter" role="group" aria-label="Filter tanggal janji kirim">
       <label for="f-from">Dari (promised date)<input id="f-from" type="date"></label>
       <label for="f-to">Sampai<input id="f-to" type="date"></label>
+      <div class="fgroup"><span class="flabel">Bulan</span><details class="ms" id="f-month"><summary>Semua bulan</summary><div class="ms-pop" id="f-month-pop"></div></details></div>
       <button class="btn" id="f-reset" type="button">Semua tanggal</button>
       <span class="fsep" aria-hidden="true"></span>
       <div class="fgroup">
@@ -337,6 +360,7 @@ td.empty-cell { text-align: center; color: var(--muted); padding: 24px; }
     <button class="tab" role="tab" id="tab-ringkasan" data-tab="ringkasan" aria-selected="false">Analisa DSL</button>
     <button class="tab" role="tab" id="tab-gagal" data-tab="gagal" aria-selected="false">NP Late &amp; Outstanding <span class="badge num" id="badge-miss">0</span></button>
     <button class="tab" role="tab" id="tab-semua" data-tab="semua" aria-selected="false">All Data Pengiriman</button>
+    <button class="tab" role="tab" id="tab-wa" data-tab="wa" aria-selected="false">REPORT WA</button>
     <button class="tab" role="tab" id="tab-upload" data-tab="upload" aria-selected="false">Data &amp; Upload</button>
   </nav>
 
@@ -364,7 +388,7 @@ td.empty-cell { text-align: center; color: var(--muted); padding: 24px; }
       <details class="card how">
         <summary>Cara menghitung DSL</summary>
         <ul>
-          <li><b>Satuan hitung</b> adalah NP unik per tanggal janji kirim (Promised Delivery Date), bukan per item.</li>
+          <li><b>Satuan hitung</b> adalah NP unik: 1 NP dihitung satu kali di semua tab, bukan per item. Bila item dalam 1 NP punya beberapa tanggal janji, NP masuk ke tanggal janji paling awal dan statusnya diambil dari item yang paling buruk (Outstanding &gt; Late &gt; On time &gt; Early).</li>
           <li>Status satu NP diambil dari item terburuknya: ada item Outstanding → Outstanding; ada item Late → Late; ada item On time → On time; semua Early → Early.</li>
           <li><b>DSL</b> = (NP On time + NP Early) ÷ total NP yang dijanjikan pada periode terpilih.</li>
           <li>Persentase kuning dengan tanda ▼ berarti lebih rendah dari DSL keseluruhan periode itu.</li>
@@ -381,7 +405,7 @@ td.empty-cell { text-align: center; color: var(--muted); padding: 24px; }
   <section class="page" id="summary" role="tabpanel" aria-labelledby="tab-summary">
     <div class="sd-head">
       <h2 class="sd-title">DELIVERY SERVICE LEVEL</h2>
-      <p class="note" style="margin:0">Satuan: NP unik per tanggal janji kirim. TY = tahun terpilih (Periode), LY = tahun sebelumnya di bulan yang sama. Filter Comment di atas ikut berlaku; filter Dari–Sampai tidak dipakai di tab ini.</p>
+      <p class="note" style="margin:0">Satuan: NP unik (1 NP dihitung sekali). TY = tahun terpilih (Periode), LY = tahun sebelumnya di bulan yang sama. Filter Comment di atas ikut berlaku; filter Dari–Sampai tidak dipakai di tab ini.</p>
     </div>
     <div class="sd-filters" role="group" aria-label="Filter Summary DSL">
       <label class="sd-f"><span>MONTH</span><select id="sd-month"><option value="">Semua</option></select></label>
@@ -496,6 +520,20 @@ td.empty-cell { text-align: center; color: var(--muted); padding: 24px; }
     </section>
   </section>
 
+  <!-- TAB REPORT WA -->
+  <section class="page" id="wa" role="tabpanel" aria-labelledby="tab-wa" hidden>
+    <section class="card">
+      <div><h2>Report WA</h2><p class="note">Teks report DSL harian untuk dikirim ke WhatsApp. Angka terisi otomatis dari data (NP unik dengan Promised Delivery Date = tanggal report) dan ikut berubah setiap ada data baru. Filter di atas tidak dipakai di tab ini.</p></div>
+      <div class="wa-ctl">
+        <label>Tanggal report (PDD)<input type="date" id="wa-date"></label>
+        <label>Salam<select id="wa-greet"><option value="">Otomatis (sesuai jam)</option><option>Selamat Pagi</option><option>Selamat Siang</option><option>Selamat Sore</option><option>Selamat Malam</option></select></label>
+        <label class="wa-foot">Penutup<textarea id="wa-foot" rows="2"></textarea></label>
+      </div>
+      <div class="wa-wrap"><pre class="wa-bubble" id="wa-text"></pre></div>
+      <div class="actions"><button class="btn primary" id="wa-copy" type="button">Salin teks</button><a class="btn" id="wa-send" target="_blank" rel="noopener">Kirim lewat WhatsApp</a><span class="cap-msg" id="wa-msg" role="status"></span></div>
+    </section>
+  </section>
+
   <!-- TAB 3 -->
   <section class="page" id="upload" role="tabpanel" aria-labelledby="tab-upload" hidden>
     <section class="card">
@@ -528,15 +566,16 @@ td.empty-cell { text-align: center; color: var(--muted); padding: 24px; }
       <p class="note">Kolom <b>STATUS DSL</b> dan <b>Delivery Parameter</b> boleh dikosongkan: dashboard akan menghitungnya dari Close Date, Promised Delivery Date dan Order Date. Semua kolom, termasuk Cust Name dan Phone Number, disimpan dan ikut keluar di Download Excel tab All Data Pengiriman.</p>
     </section>
 
-    <section class="card">
-      <div><h2>Riwayat upload</h2><p class="note">Data yang dipakai dashboard. Menghapus satu upload akan mengeluarkan barisnya dari perhitungan; Reason dan Master Brand yang sudah diedit tetap tersimpan.</p></div>
+    <details class="card hist-card" id="hist-card">
+      <summary><span><b>Riwayat upload</b> <span class="note" id="hist-count"></span></span><span class="hist-tg">Tampilkan ▾</span></summary>
+      <p class="note">Data yang dipakai dashboard. Menghapus satu upload akan mengeluarkan barisnya dari perhitungan; Reason dan Master Brand yang sudah diedit tetap tersimpan.</p>
       <div class="tablewrap">
         <table>
           <thead><tr><th>File</th><th>Diupload</th><th>Oleh</th><th>Baris</th><th>Periode janji kirim</th><th></th></tr></thead>
           <tbody id="hist"></tbody>
         </table>
       </div>
-    </section>
+    </details>
 
     <section class="card danger-zone" id="reset">
       <div><h2>Hapus All Data</h2><p class="note">Mereset dashboard: menghapus <b>semua file upload, semua baris data, semua Reason yang diedit, dan semua Master Brand</b>. Tindakan ini permanen dan tidak bisa dibatalkan. Sebaiknya download dulu data di tab All Data Pengiriman.</p></div>
@@ -593,11 +632,11 @@ var SB_KEY = "sb_publishable_KiSRfZUjVh1jW2kai0O0_Q_ZWn4oXT_";
   ];
 
   /* ===== state ===== */
-  const S = {uploads: [], chunks: new Map(), rows: [], units: [], from: '', to: '', tab: 'ringkasan', f: 'all', cm: 'all', lastRows: [], reasons: new Map(), brands: new Map(), unlocked: false, ocShow: (() => { try { return localStorage.getItem('dsl_oc_show') !== '0'; } catch (e) { return true; } })(), fr: '', fd: '', fb: '', q: '', loaded: false, dbNull: false, pending: null};
+  const S = {uploads: [], chunks: new Map(), rows: [], units: [], from: '', to: '', months: [], tab: 'ringkasan', f: 'all', cm: 'all', lastRows: [], reasons: new Map(), brands: new Map(), unlocked: false, ocShow: false /* rincian per tanggal janji tersembunyi; dibuka bila perlu */, fr: '', fd: '', fb: '', q: '', loaded: false, dbNull: false, pending: null};
   let db = null, user = null, me = null, downloads = null, canWrite = false, canDelete = false, PIN = '';
 
   /* ===== tabs ===== */
-  const TABS = ['summary', 'ringkasan', 'gagal', 'semua', 'upload'];
+  const TABS = ['summary', 'ringkasan', 'gagal', 'semua', 'wa', 'upload'];
   const showTab = (id) => {
     if (!TABS.includes(id)) return;
     S.tab = id;
@@ -634,22 +673,25 @@ var SB_KEY = "sb_publishable_KiSRfZUjVh1jW2kai0O0_Q_ZWn4oXT_";
     S.rows = [...m.values()];
     const um = new Map();
     for (const r of S.rows) {
-      const id = r.np + '|' + r.pd;
-      if (!um.has(id)) um.set(id, {id, np: r.np, pd: r.pd, rm: r.rm || '', storeName: r.store || '', type: r.type || '—', param: r.param || 'Tidak diketahui', amsen: r.amsen === 'Yes' ? 'Ambil sendiri (Amsen)' : 'Dikirim', status: r.status, close: '', items: 0, fail: [], reason: [], comment: [], store: r.store});
+      const id = r.np; /* NP unik: 1 NP dihitung sekali walau itemnya punya beberapa tanggal janji */
+      if (!um.has(id)) um.set(id, {id, np: r.np, pd: r.pd, pds: [], rm: r.rm || '', storeName: r.store || '', type: r.type || '—', param: r.param || 'Tidak diketahui', amsen: r.amsen === 'Yes' ? 'Ambil sendiri (Amsen)' : 'Dikirim', status: r.status, close: '', items: 0, fail: [], reason: [], comment: [], store: r.store});
       const u = um.get(id);
       u.items++;
+      if (r.pd && r.pd < u.pd) u.pd = r.pd; /* tanggal janji NP = tanggal janji paling awal */
+      if (r.pd && !u.pds.includes(r.pd)) u.pds.push(r.pd);
       if (RANK[r.status] > RANK[u.status]) u.status = r.status;
-      if (r.status === 'LATE' || r.status === 'OTS') u.fail.push({ic: r.ic || '', item: r.item || '', qty: r.qty, uom: r.uom || '', status: r.status, cd: r.cd || '', dn: r.dn || '', comment: r.comment || '', reason: r.reason || '', detail: r.detail || ''});
+      if (r.status === 'LATE' || r.status === 'OTS') u.fail.push({pd: r.pd || '', ic: r.ic || '', item: r.item || '', qty: r.qty, uom: r.uom || '', status: r.status, cd: r.cd || '', dn: r.dn || '', comment: r.comment || '', reason: r.reason || '', detail: r.detail || ''});
       if (r.cd && r.cd > u.close) u.close = r.cd;
       const rs = [r.reason, r.detail].filter(Boolean).join(' – ');
       if (rs && !u.reason.includes(rs)) u.reason.push(rs);
       if (r.comment && !u.comment.includes(r.comment)) u.comment.push(r.comment);
     }
-    S.units = [...um.values()].map((u) => ({...u, close: u.status === 'OTS' ? '' : u.close}));
+    S.units = [...um.values()].map((u) => ({...u, pds: u.pds.sort(), close: u.status === 'OTS' ? '' : u.close}));
+    S.npPd = new Map(S.units.map((u) => [u.np, u.pd]));
   };
   const selDate = () => {
     let a = S.from, b = S.to; if (a && b && a > b) [a, b] = [b, a];
-    return S.units.filter((u) => (!a || u.pd >= a) && (!b || u.pd <= b));
+    return S.units.filter((u) => (!a || u.pd >= a) && (!b || u.pd <= b) && (!S.months.length || S.months.includes(u.pd.slice(0, 7))));
   };
   const sel = () => selDate().filter((u) => S.cm === 'all' || cmOf(u)[S.cm]);
   const count = (us) => {
@@ -671,17 +713,19 @@ var SB_KEY = "sb_publishable_KiSRfZUjVh1jW2kai0O0_Q_ZWn4oXT_";
     return g;
   };
   const cmOf = (u) => { const t = u.comment.join(' ').toLowerCase(); return {kirim: t.includes('kirim'), amsen: t.includes('amsen')}; };
-  const rid = (u) => String(u.np + '_' + u.pd).replace(/[^A-Za-z0-9_\-.~:@+]/g, '-');
+  const rid = (u) => String(u.np + '_' + ((S.npPd && S.npPd.get(u.np)) || u.pd)).replace(/[^A-Za-z0-9_\-.~:@+]/g, '-');
+  /* data editan lama bisa tersimpan dengan tanggal janji lain dari NP yang sama: cari per NP */
+  const getNp = (map, u) => { const k = rid(u); if (map.has(k)) return map.get(k); const pre = String(u.np).replace(/[^A-Za-z0-9_\-.~:@+]/g, '-') + '_'; for (const [kk, v] of map) if (kk.startsWith(pre)) return v; return undefined; };
   /* autofill: an empty Reason becomes "Amsen" when the Comment mentions amsen (an edited Reason always wins) */
   const AMSEN_RE = /amsen/i;
   const autoReason = (u) => (!u.reason.join('').trim() && AMSEN_RE.test(u.comment.join(' ')) ? 'Amsen' : '');
   /* data editan per NP (koleksi reasons): {reason: kategori Late, detail: teks bebas}; keduanya opsional */
-  const robj = (u) => S.reasons.get(rid(u));
+  const robj = (u) => getNp(S.reasons, u);
   const hasR = (o) => !!o && o.reason != null && o.reason !== '';
   const isAuto = (u) => !hasR(robj(u)) && !!autoReason(u);
   const reasonOf = (u) => { const o = robj(u); return hasR(o) ? o.reason : (u.reason.join('; ') || autoReason(u)); };
   const isEdited = (u) => hasR(robj(u));
-  const brandOf = (u) => { const o = S.brands.get(rid(u)); return o ? (o.brand || '') : ''; };
+  const brandOf = (u) => { const o = getNp(S.brands, u); return o ? (o.brand || '') : ''; };
   const OC_RE = /reschedule\s*customer|\(rc\)|^\s*rc\b|amsen/i;
   const REASON_CATS = ['RC&AMSEN', 'TBDC', 'TBSPL', 'PECAH', 'INTERNAL', 'SISTEM ERROR'];
   const catOfText = (t) => {
@@ -721,6 +765,14 @@ var SB_KEY = "sb_publishable_KiSRfZUjVh1jW2kai0O0_Q_ZWn4oXT_";
     for (const i of [$('#f-from'), $('#f-to')]) { i.min = dates[0] || ''; i.max = dates[dates.length - 1] || ''; }
     if (document.activeElement !== $('#f-from')) $('#f-from').value = S.from || dates[0] || '';
     if (document.activeElement !== $('#f-to')) $('#f-to').value = S.to || dates[dates.length - 1] || '';
+    // filter bulan (pilihan ganda)
+    const BLN = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+    const months = [...new Set(dates.map((d) => d.slice(0, 7)))].sort();
+    S.months = S.months.filter((m) => months.includes(m));
+    const mlab = (m) => BLN[+m.slice(5) - 1] + ' ' + m.slice(0, 4);
+    $('#f-month summary').textContent = !S.months.length ? 'Semua bulan' : S.months.length === 1 ? mlab(S.months[0]) : S.months.length + ' bulan dipilih';
+    $('#f-month-pop').replaceChildren(...months.map((m) => { const cb = el('input', {type: 'checkbox', value: m, checked: S.months.includes(m)}); cb.dataset.month = m; return el('label', {}, cb, ' ' + mlab(m)); }),
+      el('div', {class: 'ms-act'}, el('button', {type: 'button', class: 'btn', textContent: 'Semua', onclick: () => { S.months = months.slice(); renderAll(); }}), el('button', {type: 'button', class: 'btn', textContent: 'Kosongkan', onclick: () => { S.months = []; renderAll(); }})));
   };
 
   const renderRing = (c) => {
@@ -759,7 +811,7 @@ var SB_KEY = "sb_publishable_KiSRfZUjVh1jW2kai0O0_Q_ZWn4oXT_";
     );
     const kpi = (tone, label, v, small, desc) => el('div', {class: 'kpi', style: '--tone:' + tone}, el('span', {class: 'kpi-l', textContent: label}), el('span', {class: 'kpi-v num'}, v, small ? ' ' : null, small ? el('small', {textContent: small}) : null), el('span', {class: 'kpi-d', textContent: desc}));
     $('#kpis').replaceChildren(
-      kpi('var(--accent)', 'Total NP dijanjikan', int(c.total), null, 'NP unik per tanggal janji kirim.'),
+      kpi('var(--accent)', 'Total NP dijanjikan', int(c.total), null, 'NP unik, 1 NP dihitung sekali.'),
       kpi('var(--ok)', 'Tercapai', int(c.ok), pct(c.dsl), 'On time ' + int(c.ontime) + ' · Early ' + int(c.early)),
       kpi('var(--late)', 'Late', int(c.late), pct(c.late / c.total), 'Terkirim, tapi lewat tanggal janji.'),
       kpi('var(--ots)', 'Outstanding', int(c.ots), pct(c.ots / c.total), 'Belum terkirim / belum close.'),
@@ -771,7 +823,7 @@ var SB_KEY = "sb_publishable_KiSRfZUjVh1jW2kai0O0_Q_ZWn4oXT_";
     const dRows = groups(us, 'date');
     /* tombol tampilkan / sembunyikan rincian per tanggal janji (pilihan diingat di browser ini) */
     const ocTog = el('div', {class: 'oc-tog'}, el('button', {class: 'btn', type: 'button', 'aria-expanded': String(!!S.ocShow), textContent: S.ocShow ? '▾ Sembunyikan per tanggal janji' : '▸ Tampilkan per tanggal janji (' + int(dRows.length) + ' tanggal)'}));
-    ocTog.firstChild.addEventListener('click', () => { S.ocShow = !S.ocShow; try { localStorage.setItem('dsl_oc_show', S.ocShow ? '1' : '0'); } catch (e) {} renderSummary(); });
+    ocTog.firstChild.addEventListener('click', () => { S.ocShow = !S.ocShow; renderSummary(); });
     const tbl = el('table', {class: 'oc-t'},
       el('thead', {}, el('tr', {}, ...['Tanggal janji', 'Total NP', 'DSL', 'RC dan AMSEN', 'DSL Customer'].map((h) => el('th', {textContent: h})))),
       el('tbody', {}, ...dRows.map((r) => el('tr', {},
@@ -1015,26 +1067,16 @@ var SB_KEY = "sb_publishable_KiSRfZUjVh1jW2kai0O0_Q_ZWn4oXT_";
       big('DSL Customer', pct(last.dslCust), dTxt(dc), 'main' + (dc != null && dc < 0 ? ' down' : '')));
     const tbl = el('table', {class: 'oc-t'},
       el('thead', {}, el('tr', {}, ...['Minggu (Sen–Min, per bulan)', 'Total NP', 'On time', 'Early', 'Late', 'Outstanding', 'DSL', 'RC dan AMSEN', 'DSL Customer'].map((h) => el('th', {textContent: h})))),
-      el('tbody', {}, ...[...w].reverse().map((r) => el('tr', {},
+      el('tbody', {}, ...w.map((r) => el('tr', {},
         el('td', {class: 'nw'}, weekLabel(r.key), el('small', {class: 'note', style: 'display:block;margin:0', textContent: weekSpan(r.key) + ' hari' + (weekSpan(r.key) < 7 ? ' (dipotong batas bulan)' : '') + (r.days < weekSpan(r.key) ? ' · ' + r.days + ' hari ada data' : '')})),
         el('td', {class: 'num', textContent: int(r.total)}), el('td', {class: 'num', textContent: int(r.ontime)}), el('td', {class: 'num', textContent: int(r.early)}),
         el('td', {class: 'num', style: r.late ? 'color:var(--late);font-weight:700' : '', textContent: int(r.late)}),
         el('td', {class: 'num', style: r.ots ? 'color:var(--ots);font-weight:700' : '', textContent: int(r.ots)}),
         el('td', {class: 'num', textContent: pct(r.dsl)}), el('td', {class: 'num', textContent: r.oc ? '+' + int(r.oc) : '—'}),
         el('td', {class: 'num strong', textContent: pct(r.dslCust)})))));
-    const bars = el('div', {class: 'rows'});
-    for (const r of w) {
-      const bar = el('div', {class: 'bar'});
-      for (const s of STATUS) if (r[s.k]) bar.append(el('span', {style: 'width:' + (r[s.k] / r.total * 100) + '%;background:' + s.c}));
-      bar.addEventListener('pointermove', (ev) => showTip(bars, weekLabel(r.key), [...STATUS.map((s) => ({label: s.label, value: int(r[s.k]) + ' NP', c: s.c})), {label: 'DSL', value: pct(r.dsl)}, {label: 'DSL Customer', value: pct(r.dslCust)}], ev));
-      bar.addEventListener('pointerleave', () => { tip.hidden = true; });
-      const v = el('div', {class: 'r-v num', textContent: pct(r.dsl)});
-      v.append(el('small', {style: 'color:var(--accent)', textContent: 'Cust ' + pct(r.dslCust)}));
-      bars.append(el('div', {class: 'r'}, el('div', {class: 'r-name'}, weekLabel(r.key), el('small', {class: 'num', textContent: int(r.total) + ' NP · ' + (r.miss ? int(r.miss) + ' Late' : 'semua tercapai')})), bar, v));
-    }
     card.replaceChildren(
       el('div', {}, el('h2', {textContent: 'Analisa Kiriman per Minggu'}), el('p', {class: 'note', textContent: 'Dikelompokkan per minggu tanggal janji kirim, Senin sampai Minggu, dengan cut off per bulan: Week 1 dimulai tanggal 1 sampai hari Minggu pertama, dan minggu terakhir berhenti di akhir bulan. DSL Customer menghitung RC dan AMSEN sebagai tercapai.'})),
-      tiles, bars, el('div', {class: 'tablewrap', style: 'max-height:none'}, tbl));
+      tiles, el('div', {class: 'tablewrap', style: 'max-height:none'}, tbl));
   };
 
   const renderReasonBrand = (us) => {
@@ -1168,6 +1210,7 @@ var SB_KEY = "sb_publishable_KiSRfZUjVh1jW2kai0O0_Q_ZWn4oXT_";
   const renderHistory = async () => {
     const tb = $('#hist'); tb.replaceChildren();
     const ups = [...S.uploads].sort((a, b2) => (a.at < b2.at ? 1 : -1));
+    $('#hist-count').textContent = S.loaded ? '· ' + ups.length + ' file' : '';
     if (!ups.length) { tb.append(el('tr', {}, el('td', {class: 'empty-cell', colSpan: 6, textContent: S.loaded ? 'Belum ada upload.' : 'Memuat…'}))); return; }
     const ids = [...new Set(ups.map((u) => u.by).filter(Boolean))];
     const unknown = ids.filter((i) => !(i in names));
@@ -1220,10 +1263,10 @@ var SB_KEY = "sb_publishable_KiSRfZUjVh1jW2kai0O0_Q_ZWn4oXT_";
   const A = {st: 'all', q: '', limit: 300, rows: []};
   const STLABEL = {ONTIME: 'On time', EARLY: 'Early', LATE: 'Late', OTS: 'Outstanding'};
   const rowAuto = (r) => (!String(r.reason || '').trim() && AMSEN_RE.test(r.comment || '') ? 'Amsen' : '');
-  const rowReason = (r) => { const o = S.reasons.get(rid(r)); return hasR(o) ? o.reason : ([r.reason, r.detail].filter(Boolean).join(' – ') || rowAuto(r)); };
+  const rowReason = (r) => { const o = getNp(S.reasons, r); return hasR(o) ? o.reason : ([r.reason, r.detail].filter(Boolean).join(' – ') || rowAuto(r)); };
   const allRows = () => {
     const ids = new Set(sel().map((u) => u.id));
-    return S.rows.filter((r) => ids.has(r.np + '|' + r.pd));
+    return S.rows.filter((r) => ids.has(r.np));
   };
   const renderAllData = () => {
     const base = allRows();
@@ -1390,7 +1433,7 @@ var SB_KEY = "sb_publishable_KiSRfZUjVh1jW2kai0O0_Q_ZWn4oXT_";
   for (const b of $$('.tab[data-tab="summary"]')) b.addEventListener('click', () => setTimeout(renderSumDsl, 0));
 
   /* ===== Capture: save the active tab (with header) as a PNG ===== */
-  const TAB_NAME = {summary: 'Summary_DSL', ringkasan: 'Analisa_DSL', gagal: 'NP_Late_Outstanding', semua: 'All_Data_Pengiriman', upload: 'Data_Upload'};
+  const TAB_NAME = {summary: 'Summary_DSL', ringkasan: 'Analisa_DSL', gagal: 'NP_Late_Outstanding', semua: 'All_Data_Pengiriman', wa: 'Report_WA', upload: 'Data_Upload'};
   for (const page of $$('.page[role=tabpanel]')) {
     const msg = el('span', {class: 'cap-msg', hidden: true});
     const btn = el('button', {class: 'btn primary', type: 'button', title: 'Simpan tampilan tab ini sebagai gambar PNG'});
@@ -1418,7 +1461,50 @@ var SB_KEY = "sb_publishable_KiSRfZUjVh1jW2kai0O0_Q_ZWn4oXT_";
     page.prepend(el('div', {class: 'capbar'}, msg, btn));
   }
 
-  const renderAll = () => { renderHeader(); renderSummary(); renderSumDsl(); renderTable(); renderAllData(); renderHistory(); };
+  /* ===== REPORT WA ===== */
+  const W = {date: '', foot: (() => { try { return localStorage.getItem('dsl_wa_foot'); } catch (e) { return null; } })()};
+  if (W.foot == null) W.foot = 'Terimakasih,\nNIKMAT MANA LAGI YANG KAU DUSTAKAN';
+  const BLN_L = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+  const p2f = (n, d) => (d ? (n / d * 100).toFixed(2).replace('.', ',') : '0,00') + '%';
+  const todayISO = () => { const t = new Date(); return t.getFullYear() + '-' + String(t.getMonth() + 1).padStart(2, '0') + '-' + String(t.getDate()).padStart(2, '0'); };
+  const greetAuto = () => { const h = new Date().getHours(); return h >= 4 && h < 10 ? 'Selamat Pagi' : h < 15 && h >= 10 ? 'Selamat Siang' : h >= 15 && h < 18 ? 'Selamat Sore' : 'Selamat Malam'; };
+  const waText = () => {
+    const d = W.date; if (!d) return 'Belum ada data.';
+    const us = S.units.filter((u) => u.pd === d), c = count(us), [y, m, dd] = dp(d);
+    const L = [];
+    L.push(($('#wa-greet').value || greetAuto()) + ' Berikut Reports DSL Mitra 10 Percetakan Negara');
+    L.push('Tgl ' + dd + ' ' + BLN_L[m - 1] + ' ' + y, '');
+    L.push('PDD = ' + c.total);
+    L.push('OT = ' + c.ok + ' (' + p2f(c.ok, c.total) + ')', '');
+    const late = us.filter((u) => u.status === 'LATE' || u.status === 'OTS');
+    L.push('Late = ' + (late.length ? late.length + ' (' + p2f(late.length, c.total) + ')' : ''));
+    const rc = new Map(); for (const u of late) { const k = catOfText(reasonOf(u)); rc.set(k, (rc.get(k) || 0) + 1); }
+    L.push('Reason Late = ' + [...rc].sort((a, b) => b[1] - a[1]).map(([k, v]) => k + ' ' + v + ' NP').join(', '), '');
+    L.push('Contribusi:');
+    const lab = {'Sameday': 'Sameday', 'Next Day': 'Next Day', '2 Days': '2 Days', 'Up 2 Days': '>2 Days', 'Tidak diketahui': 'Tidak diketahui'};
+    for (const k of PORDER) { const v = us.filter((u) => u.param === k).length; if (k === 'Tidak diketahui' && !v) continue; L.push(lab[k] + ' = ' + v + ' (' + p2f(v, c.total) + ')'); }
+    L.push('', W.foot);
+    return L.join('\n');
+  };
+  const renderWA = () => {
+    if (!S.loaded) return;
+    const dates = [...new Set(S.units.map((u) => u.pd))].sort(), t = todayISO();
+    if (!W.date || (dates.length && !dates.includes(W.date) && !W.userPick)) { const past = dates.filter((x) => x <= t); W.date = dates.includes(t) ? t : past.length ? past[past.length - 1] : dates[dates.length - 1] || ''; }
+    const di = $('#wa-date'); if (document.activeElement !== di) di.value = W.date;
+    const ft = $('#wa-foot'); if (document.activeElement !== ft) ft.value = W.foot;
+    const txt = waText(); $('#wa-text').textContent = txt; $('#wa-send').href = 'https://wa.me/?text=' + encodeURIComponent(txt);
+  };
+  $('#wa-date').addEventListener('change', (e) => { if (/^\d{4}-\d\d-\d\d$/.test(e.target.value)) { W.date = e.target.value; W.userPick = true; renderWA(); } });
+  $('#wa-greet').addEventListener('change', renderWA);
+  $('#wa-foot').addEventListener('input', (e) => { W.foot = e.target.value; try { localStorage.setItem('dsl_wa_foot', W.foot); } catch (x) {} renderWA(); });
+  $('#wa-copy').addEventListener('click', async () => {
+    const txt = $('#wa-text').textContent, m = $('#wa-msg');
+    let ok = false; try { await navigator.clipboard.writeText(txt); ok = true; } catch (e) {
+      const ta = el('textarea', {value: txt, style: 'position:fixed;left:-9999px'}); document.body.append(ta); ta.select(); try { ok = document.execCommand('copy'); } catch (x) {} ta.remove(); }
+    m.className = 'cap-msg ' + (ok ? 'ok' : 'err'); m.textContent = ok ? 'Teks tersalin. Tempel di WhatsApp.' : 'Gagal menyalin, blok teks lalu salin manual.'; setTimeout(() => { m.textContent = ''; }, 4000);
+  });
+
+  const renderAll = () => { renderHeader(); renderSummary(); renderSumDsl(); renderTable(); renderAllData(); renderHistory(); renderWA(); };
 
   /* ===== filters ===== */
   for (const [id, key] of [['#f-from', 'from'], ['#f-to', 'to']]) {
@@ -1426,7 +1512,9 @@ var SB_KEY = "sb_publishable_KiSRfZUjVh1jW2kai0O0_Q_ZWn4oXT_";
     i.addEventListener('change', () => { if (i.value && i.validity.valid && /^\d{4}-\d\d-\d\d$/.test(i.value)) { S[key] = i.value; renderAll(); } });
     i.addEventListener('blur', renderHeader);
   }
-  $('#f-reset').addEventListener('click', () => { S.from = ''; S.to = ''; renderAll(); });
+  $('#f-reset').addEventListener('click', () => { S.from = ''; S.to = ''; S.months = []; renderAll(); });
+  $('#f-month').addEventListener('change', (e) => { const m = e.target.dataset && e.target.dataset.month; if (!m) return; S.months = e.target.checked ? [...new Set([...S.months, m])].sort() : S.months.filter((x) => x !== m); renderAll(); });
+  document.addEventListener('click', (e) => { const d = $('#f-month'); if (d.open && !d.contains(e.target)) d.open = false; });
   for (const c of $$('.chip[data-f]')) c.addEventListener('click', () => { S.f = c.dataset.f; for (const o of $$('.chip[data-f]')) o.setAttribute('aria-pressed', String(o === c)); renderTable(); });
   for (const c of $$('.seg [data-c]')) c.addEventListener('click', () => { S.cm = c.dataset.c; for (const o of $$('.seg [data-c]')) o.setAttribute('aria-pressed', String(o === c)); renderAll(); });
   /* kata kunci kini dicek di server (Supabase), tidak disimpan di halaman ini */
@@ -1519,7 +1607,7 @@ var SB_KEY = "sb_publishable_KiSRfZUjVh1jW2kai0O0_Q_ZWn4oXT_";
     const dayOf = (r) => { if (r.day != null && r.day !== '') return Number(r.day); const [y, m, d] = dp(r.pd); return d; };
     const aoa = [H];
     for (const r of rows) {
-      const ed = S.reasons.get(rid(r));
+      const ed = getNp(S.reasons, r);
       aoa.push([
         numOr(r.sn), r.store || '', r.rm || '', r.dn || '', '', r.type || '', r.np, r.cust || '', numOr(r.phone), numOr(r.ic), r.item || '', r.uom || '',
         r.qty == null || r.qty === '' ? '' : r.qty, serial(r.od), serial(r.pd), serial(r.pod), serial(r.cd), r.status, r.spc || '', r.sales || '',
@@ -1548,7 +1636,7 @@ var SB_KEY = "sb_publishable_KiSRfZUjVh1jW2kai0O0_Q_ZWn4oXT_";
     if (!downloads) { flash(box, 'err', 'Download tidak tersedia di tampilan ini.'); return; }
     const H = ['Status', 'Promised Delivery Date', 'Close Date', 'NPNo', 'DNNo', 'Type NP', 'Item Code', 'Item Name', 'Qty', 'UOM', 'Delivery Parameter', 'Amsen', 'Reason', 'Detail Reason', 'Master Brand', 'Comment', 'Kategori Customer'];
     const aoa = [H];
-    for (const u of rows) for (const f of u.fail) aoa.push([f.status === 'OTS' ? 'OUTSTANDING' : 'LATE', serial(u.pd), serial(f.cd), u.np, f.dn, u.type, f.ic, f.item, f.qty == null ? '' : f.qty, f.uom, u.param, u.amsen.startsWith('Ambil') ? 'Yes' : 'No', (reasonOf(u) ? catOfText(reasonOf(u)) : ''), detailOf(u), brandOf(u), f.comment, isOC(u) ? 'RC dan AMSEN' : '']);
+    for (const u of rows) for (const f of u.fail) aoa.push([f.status === 'OTS' ? 'OUTSTANDING' : 'LATE', serial(f.pd || u.pd), serial(f.cd), u.np, f.dn, u.type, f.ic, f.item, f.qty == null ? '' : f.qty, f.uom, u.param, u.amsen.startsWith('Ambil') ? 'Yes' : 'No', (reasonOf(u) ? catOfText(reasonOf(u)) : ''), detailOf(u), brandOf(u), f.comment, isOC(u) ? 'RC dan AMSEN' : '']);
     const ws = XLSX.utils.aoa_to_sheet(aoa);
     for (let r = 1; r < aoa.length; r++) for (const c of [1, 2]) { const ref = XLSX.utils.encode_cell({r, c}); if (ws[ref] && ws[ref].t === 'n') ws[ref].z = 'yyyy-mm-dd'; }
     ws['!cols'] = H.map((h, i) => ({wch: i === 7 ? 48 : i === 14 ? 36 : Math.max(10, h.length + 2)}));
@@ -1670,12 +1758,12 @@ var SB_KEY = "sb_publishable_KiSRfZUjVh1jW2kai0O0_Q_ZWn4oXT_";
       const existing = new Set(S.rows.map((r) => rowKey(r, s1)));
       const replaced = res.rows.filter((r) => existing.has(rowKey(r, s2))).length;
       const dates = res.rows.map((r) => r.pd).sort();
-      const nps = new Set(res.rows.map((r) => r.np + '|' + r.pd)).size;
+      const nps = new Set(res.rows.map((r) => r.np)).size;
       S.pending = {file: file.name, ...res, from: dates[0], to: dates[dates.length - 1]};
       msg.hidden = true;
       const st = (v, l) => el('div', {}, el('b', {class: 'num', textContent: v}), el('span', {textContent: l}));
       $('#prev-stats').replaceChildren(
-        st(int(res.rows.length), 'baris item terbaca'), st(int(nps), 'NP per tanggal janji'),
+        st(int(res.rows.length), 'baris item terbaca'), st(int(nps), 'NP unik'),
         st(int(res.rows.length - replaced), 'baris baru'), st(int(replaced), 'menggantikan data lama'),
         st(dDate(dates[0]) + ' – ' + dDate(dates[dates.length - 1], true), 'periode janji kirim'));
       const w = [];
