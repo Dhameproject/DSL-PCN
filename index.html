@@ -173,6 +173,9 @@ td.cust-c { min-width: 160px; max-width: 240px; white-space: normal; }
 .sd-tip { position: absolute; pointer-events: none; background: #fff; border: 1px solid var(--line); border-radius: 6px; padding: 6px 9px; font-size: 12px; box-shadow: 0 4px 14px rgba(0,0,0,.15); white-space: nowrap; z-index: 5; }
 .fsep { width: 1px; align-self: stretch; background: var(--line); margin: 0 4px; }
 .fgroup { display: flex; flex-direction: column; gap: 3px; }
+.page > .tabfilter { align-self: flex-start; max-width: 100%; margin-bottom: 2px; }
+.tabfilter.only-cm .fdate { display: none !important; }
+.tabfilter[hidden] { display: none !important; }
 .flabel { font-size: 12px; color: var(--muted); font-weight: 600; }
 .seg { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
 .seg button { appearance: none; border: 0; background: var(--panel); padding: 6px 12px; font-size: 13px; font-weight: 600; cursor: pointer; display: inline-flex; gap: 6px; }
@@ -350,12 +353,12 @@ td.empty-cell { text-align: center; color: var(--muted); padding: 24px; }
       <p class="sub" id="cloud-st"></p>
       <button class="btn pinbtn" id="pin-btn" type="button">🔒 Masukkan PIN edit</button>
     </div>
-    <div class="filter" role="group" aria-label="Filter tanggal janji kirim">
-      <label for="f-from">Dari (promised date)<input id="f-from" type="date"></label>
-      <label for="f-to">Sampai<input id="f-to" type="date"></label>
-      <div class="fgroup"><span class="flabel">Bulan</span><details class="ms" id="f-month"><summary>Semua bulan</summary><div class="ms-pop" id="f-month-pop"></div></details></div>
-      <button class="btn" id="f-reset" type="button">Semua tanggal</button>
-      <span class="fsep" aria-hidden="true"></span>
+    <div class="filter tabfilter" id="tabfilter" role="group" aria-label="Filter tab ini">
+      <label for="f-from" class="fdate">Dari (promised date)<input id="f-from" type="date"></label>
+      <label for="f-to" class="fdate">Sampai<input id="f-to" type="date"></label>
+      <div class="fgroup fdate"><span class="flabel">Bulan</span><details class="ms" id="f-month"><summary>Semua bulan</summary><div class="ms-pop" id="f-month-pop"></div></details></div>
+      <button class="btn fdate" id="f-reset" type="button">Semua tanggal</button>
+      <span class="fsep fdate" aria-hidden="true"></span>
       <div class="fgroup">
         <span class="flabel" id="cm-label">Comment</span>
         <div class="seg" role="group" aria-labelledby="cm-label">
@@ -417,7 +420,7 @@ td.empty-cell { text-align: center; color: var(--muted); padding: 24px; }
   <section class="page" id="summary" role="tabpanel" aria-labelledby="tab-summary">
     <div class="sd-head">
       <h2 class="sd-title">DELIVERY SERVICE LEVEL</h2>
-      <p class="note" style="margin:0">Satuan: NP unik (1 NP dihitung sekali). TY = tahun terpilih (Periode), LY = tahun sebelumnya di bulan yang sama. Filter Comment di atas ikut berlaku; filter Dari–Sampai tidak dipakai di tab ini.</p>
+      <p class="note" style="margin:0">Satuan: NP unik (1 NP dihitung sekali). TY = tahun terpilih (Periode), LY = tahun sebelumnya di bulan yang sama. Filter Comment di kotak filter tab ini hanya berlaku untuk tab ini.</p>
     </div>
     <div class="sd-filters" role="group" aria-label="Filter Summary DSL">
       <div class="sd-f"><span>MONTH</span><details class="ms" id="sd-month"><summary>Semua</summary><div class="ms-pop"></div></details></div>
@@ -509,7 +512,7 @@ td.empty-cell { text-align: center; color: var(--muted); padding: 24px; }
   <!-- TAB: ALL DATA -->
   <section class="page" id="semua" role="tabpanel" aria-labelledby="tab-semua" hidden>
     <section class="card">
-      <div><h2>All Data Pengiriman</h2><p class="note">Semua baris item dari seluruh file yang sudah diupload (data yang sama dipakai dashboard), mengikuti filter Dari–Sampai dan Comment di atas. Reason yang sudah diedit ikut tampil.</p></div>
+      <div><h2>All Data Pengiriman</h2><p class="note">Semua baris item dari seluruh file yang sudah diupload (data yang sama dipakai dashboard), mengikuti filter Dari–Sampai, Bulan, dan Comment di tab ini. Reason yang sudah diedit ikut tampil.</p></div>
       <div class="ctrl">
         <div class="chips" role="group" aria-label="Filter status item">
           <button class="chip" data-a="all" aria-pressed="true">Semua <span class="num" id="a-all">0</span></button>
@@ -538,7 +541,7 @@ td.empty-cell { text-align: center; color: var(--muted); padding: 24px; }
   <!-- TAB REPORT WA -->
   <section class="page" id="wa" role="tabpanel" aria-labelledby="tab-wa" hidden>
     <section class="card">
-      <div><h2>REPORT DSL WA</h2><p class="note">Teks report DSL harian untuk dikirim ke WhatsApp. Angka terisi otomatis dari data (NP unik dengan Promised Delivery Date = tanggal report) dan ikut berubah setiap ada data baru. PDD, OT, dan Contribusi hanya menghitung NP dengan Comment <b>Kirim</b>; Contribusi = porsi Sameday/Next Day/2 Days/&gt;2 Days dari NP <b>OT</b>. Late dan Reason Late menghitung semua NP tanggal tersebut, tanpa NP dengan reason <b>RC &amp; AMSEN</b>. Filter di atas tidak dipakai di tab ini.</p></div>
+      <div><h2>REPORT DSL WA</h2><p class="note">Teks report DSL harian untuk dikirim ke WhatsApp. Angka terisi otomatis dari data (NP unik dengan Promised Delivery Date = tanggal report) dan ikut berubah setiap ada data baru. PDD, OT, dan Contribusi hanya menghitung NP dengan Comment <b>Kirim</b>; Contribusi = porsi Sameday/Next Day/2 Days/&gt;2 Days dari NP <b>OT</b>. Late dan Reason Late menghitung semua NP tanggal tersebut, tanpa NP dengan reason <b>RC &amp; AMSEN</b>. Report memakai tanggal report sendiri (bukan filter tab lain).</p></div>
       <div class="wa-ctl">
         <label>Tanggal report (PDD)<input type="date" id="wa-date"></label>
         <label>Salam<select id="wa-greet"><option value="">Otomatis (sesuai jam)</option><option>Selamat Pagi</option><option>Selamat Siang</option><option>Selamat Sore</option><option>Selamat Malam</option></select></label>
@@ -676,13 +679,29 @@ var SB_KEY = "sb_publishable_KiSRfZUjVh1jW2kai0O0_Q_ZWn4oXT_";
   const S = {uploads: [], chunks: new Map(), rows: [], units: [], from: '', to: '', months: [], ritase: new Map(), pendingRit: [], tab: 'ringkasan', fs: [], cms: [], lastRows: [], reasons: new Map(), brands: new Map(), unlocked: false, ocShow: false /* rincian per tanggal janji tersembunyi; dibuka bila perlu */, frs: [], fd: '', fbs: [], q: '', loaded: false, dbNull: false, pending: null};
   let db = null, user = null, me = null, downloads = null, canWrite = false, canDelete = false, PIN = '';
 
+  /* ===== filter per tab: tiap tab punya Dari/Sampai/Bulan/Comment sendiri ===== */
+  const FTABS = ['summary', 'ringkasan', 'gagal', 'semua'];
+  const F = Object.fromEntries(FTABS.map((k) => [k, {from: '', to: '', months: [], cms: []}]));
+  let FOV = null;
+  const fkey = () => FOV || (FTABS.includes(S.tab) ? S.tab : 'ringkasan');
+  for (const k of ['from', 'to', 'months', 'cms']) { delete S[k]; Object.defineProperty(S, k, {get: () => F[fkey()][k], set: (v) => { F[fkey()][k] = v; }, enumerable: true}); }
+  const withTab = (k, fn) => { const p = FOV; FOV = k; try { fn(); } finally { FOV = p; } };
   /* ===== tabs ===== */
   const TABS = ['summary', 'ringkasan', 'gagal', 'semua', 'wa', 'upload'];
+  const placeFilter = () => {
+    const fb = document.getElementById('tabfilter'); if (!fb) return;
+    const on = FTABS.includes(S.tab); fb.hidden = !on;
+    fb.classList.toggle('only-cm', S.tab === 'summary');
+    if (on) { const pg = document.getElementById(S.tab); if (pg && pg.firstElementChild !== fb) pg.prepend(fb); }
+    for (const d of fb.querySelectorAll('details[open]')) d.open = false;
+    if (S.loaded) { try { renderHeader(); } catch (e) {} }
+  };
   const showTab = (id) => {
     if (!TABS.includes(id)) return;
     S.tab = id;
     for (const p of $$('.page[role=tabpanel]')) p.hidden = p.id !== id;
     for (const b of $$('.tab')) b.setAttribute('aria-selected', String(b.dataset.tab === id));
+    placeFilter();
     try { history.replaceState(null, '', '#' + id); } catch (e) {}
   };
   for (const b of $$('.tab')) b.addEventListener('click', () => showTab(b.dataset.tab));
@@ -819,6 +838,8 @@ var SB_KEY = "sb_publishable_KiSRfZUjVh1jW2kai0O0_Q_ZWn4oXT_";
     const months = [...new Set(dates.map((d) => d.slice(0, 7)))].sort();
     S.months = S.months.filter((m) => months.includes(m));
     const mlab = (m) => BLN[+m.slice(5) - 1] + ' ' + m.slice(0, 4);
+    chipSync('.seg [data-c]', 'c', S.cms);
+    { const bd = selDate(); $('#cm-kirim').textContent = int(bd.filter((u) => cmOf(u).kirim).length); $('#cm-amsen').textContent = int(bd.filter((u) => cmOf(u).amsen).length); }
     $('#f-month summary').textContent = !S.months.length ? 'Semua bulan' : S.months.length === 1 ? mlab(S.months[0]) : S.months.length + ' bulan dipilih';
     $('#f-month-pop').replaceChildren(...months.map((m) => { const cb = el('input', {type: 'checkbox', value: m, checked: S.months.includes(m)}); cb.dataset.month = m; return el('label', {}, cb, ' ' + mlab(m)); }),
       el('div', {class: 'ms-act'}, el('button', {type: 'button', class: 'btn', textContent: 'Semua', onclick: () => { S.months = months.slice(); renderAll(); }}), el('button', {type: 'button', class: 'btn', textContent: 'Kosongkan', onclick: () => { S.months = []; renderAll(); }})));
@@ -1214,8 +1235,6 @@ var SB_KEY = "sb_publishable_KiSRfZUjVh1jW2kai0O0_Q_ZWn4oXT_";
     $('#badge-miss').textContent = int(c.miss);
     $('#c-all').textContent = int(c.miss); $('#c-late').textContent = int(c.late); $('#c-ots').textContent = int(c.ots);
     const byDate = selDate();
-    $('#cm-kirim').textContent = int(byDate.filter((u) => cmOf(u).kirim).length);
-    $('#cm-amsen').textContent = int(byDate.filter((u) => cmOf(u).amsen).length);
     const q = S.q;
     /* isi pilihan filter kolom dari data yang ada (pilihan aktif tetap dipertahankan) */
     const base = us.filter((u) => u.status === 'LATE' || u.status === 'OTS');
@@ -1678,7 +1697,7 @@ var SB_KEY = "sb_publishable_KiSRfZUjVh1jW2kai0O0_Q_ZWn4oXT_";
   });
   for (const inp of $$('[data-rm]')) inp.addEventListener('input', () => { if (!RW.date) return; rmSet(RW.date, inp.dataset.rm, inp.value); renderRit(); });
 
-  const renderAll = () => { renderHeader(); renderSummary(); renderSumDsl(); renderTable(); renderAllData(); renderHistory(); renderWA(); renderRit(); };
+  const renderAll = () => { renderHeader(); withTab('ringkasan', renderSummary); withTab('summary', renderSumDsl); withTab('gagal', renderTable); withTab('semua', renderAllData); renderHistory(); renderWA(); renderRit(); };
 
   /* ===== filters ===== */
   for (const [id, key] of [['#f-from', 'from'], ['#f-to', 'to']]) {
