@@ -165,6 +165,8 @@ td.cust-c { min-width: 160px; max-width: 240px; white-space: normal; }
 .capbar .cap-msg.err { color: var(--ots); }
 .wrap.capturing .tablewrap, .wrap.capturing .sd-tw { max-height: none !important; overflow: visible !important; }
 .wrap.capturing .capbar, .wrap.capturing #all-more, .wrap.capturing .pinbtn { display: none !important; }
+/* saat capture: isi dropdown filter dan bagian yang tertutup tidak ikut tergambar */
+.wrap.capturing .ms-pop, .wrap.capturing details:not([open]) > :not(summary) { display: none !important; }
 .cat-chip { display: inline-block; margin-left: 6px; padding: 0 7px; border-radius: 999px; font-size: 10.5px; font-weight: 800; background: var(--accent-soft); color: var(--accent); vertical-align: 1px; }
 .cat-chip.other { background: var(--warn-soft); color: var(--late); }
 .sd-t td.zero { color: var(--muted); }
