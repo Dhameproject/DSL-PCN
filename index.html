@@ -541,7 +541,7 @@ td.empty-cell { text-align: center; color: var(--muted); padding: 24px; }
   <!-- TAB REPORT WA -->
   <section class="page" id="wa" role="tabpanel" aria-labelledby="tab-wa" hidden>
     <section class="card">
-      <div><h2>REPORT DSL WA</h2><p class="note">Teks report DSL harian untuk dikirim ke WhatsApp. Angka terisi otomatis dari data (NP unik dengan Promised Delivery Date = tanggal report) dan ikut berubah setiap ada data baru. PDD, OT, dan Contribusi hanya menghitung NP dengan Comment <b>Kirim</b>; Contribusi = porsi Sameday/Next Day/2 Days/&gt;2 Days dari NP <b>OT</b>. Late dan Reason Late menghitung semua NP tanggal tersebut, tanpa NP dengan reason <b>RC &amp; AMSEN</b>. Report memakai tanggal report sendiri (bukan filter tab lain).</p></div>
+      <div><h2>REPORT DSL WA</h2><p class="note">Teks report DSL harian untuk dikirim ke WhatsApp. Angka terisi otomatis dari data (NP unik dengan Promised Delivery Date = tanggal report) dan ikut berubah setiap ada data baru. PDD, OT, dan Contribusi hanya menghitung NP dengan Comment <b>Kirim</b>; Contribusi = porsi Sameday/Next Day/2 Days/&gt;2 Days dari NP <b>OT</b>. Late dan Reason Late menghitung semua NP Late/Outstanding tanggal tersebut <b>termasuk RC</b> (contoh: TBSPL 1 NP, RC 1 NP), tanpa NP dengan reason <b>AMSEN</b>. Report memakai tanggal report sendiri (bukan filter tab lain).</p></div>
       <div class="wa-ctl">
         <label>Tanggal report (PDD)<input type="date" id="wa-date"></label>
         <label>Salam<select id="wa-greet"><option value="">Otomatis (sesuai jam)</option><option>Selamat Pagi</option><option>Selamat Siang</option><option>Selamat Sore</option><option>Selamat Malam</option></select></label>
@@ -1598,7 +1598,7 @@ var SB_KEY = "sb_publishable_KiSRfZUjVh1jW2kai0O0_Q_ZWn4oXT_";
     L.push('Tgl ' + dd + ' ' + BLN_L[m - 1] + ' ' + y, '');
     L.push('PDD = ' + c.total);
     L.push('OT = ' + c.ok + ' (' + p2f(c.ok, c.total) + ')', '');
-    const late = all.filter((u) => (u.status === 'LATE' || u.status === 'OTS') && !isOC(u)); /* Late & Reason: semua NP tanggal tsb, tanpa RC & AMSEN */
+    const late = all.filter((u) => (u.status === 'LATE' || u.status === 'OTS') && ocType(u) !== 'AMSEN'); /* Late & Reason: semua NP tanggal tsb termasuk RC, tanpa AMSEN */
     L.push('Late = ' + (late.length ? late.length + ' (' + p2f(late.length, c.total) + ')' : ''));
     const rc = new Map(); for (const u of late) { const k = catOf(u); rc.set(k, (rc.get(k) || 0) + 1); }
     L.push('Reason Late = ' + [...rc].sort((a, b) => b[1] - a[1]).map(([k, v]) => k + ' ' + v + ' NP').join(', '), '');
