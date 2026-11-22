@@ -170,6 +170,16 @@ td.cust-c { min-width: 160px; max-width: 240px; white-space: normal; }
 .cat-chip { display: inline-block; margin-left: 6px; padding: 0 7px; border-radius: 999px; font-size: 10.5px; font-weight: 800; background: var(--accent-soft); color: var(--accent); vertical-align: 1px; }
 .cat-chip.other { background: var(--warn-soft); color: var(--late); }
 .sd-t td.zero { color: var(--muted); }
+/* Tabel TY vs LY per bulan: tampil penuh tanpa scroll (layar >= 900px) */
+.sd-tables .sd-tw { max-height: none; overflow: visible; }
+.sd-tables .sd-t { table-layout: auto; font-size: clamp(10.5px, .82vw, 12.5px); }
+.wrap .sd-tables .sd-t th { white-space: normal; line-height: 1.2; padding: 6px 4px; font-size: clamp(9.5px, .74vw, 12px); vertical-align: bottom; position: static; }
+.wrap .sd-tables .sd-t th.sd-grp { padding: 7px 4px; vertical-align: middle; }
+.sd-tables .sd-t td { padding: 5px 4px; }
+.sd-tables .sd-t td:first-child, .wrap .sd-tables .sd-t th:first-child { padding-left: 8px; }
+.sd-tables .sd-t tfoot td { position: static; }
+@media (max-width: 899px) { .sd-tables .sd-tw { overflow-x: auto; } .sd-tables .sd-t td { white-space: nowrap; } }
+
 .sd-tip { position: absolute; pointer-events: none; background: #fff; border: 1px solid var(--line); border-radius: 6px; padding: 6px 9px; font-size: 12px; box-shadow: 0 4px 14px rgba(0,0,0,.15); white-space: nowrap; z-index: 5; }
 .fsep { width: 1px; align-self: stretch; background: var(--line); margin: 0 4px; }
 .fgroup { display: flex; flex-direction: column; gap: 3px; }
@@ -420,13 +430,14 @@ td.empty-cell { text-align: center; color: var(--muted); padding: 24px; }
   <section class="page" id="summary" role="tabpanel" aria-labelledby="tab-summary">
     <div class="sd-head">
       <h2 class="sd-title">DELIVERY SERVICE LEVEL</h2>
-      <p class="note" style="margin:0">Satuan: NP unik (1 NP dihitung sekali). TY = tahun terpilih (Periode), LY = tahun sebelumnya di bulan yang sama. Filter Comment di kotak filter tab ini hanya berlaku untuk tab ini.</p>
+      <p class="note" style="margin:0">Satuan: NP unik (1 NP dihitung sekali). TY = tahun terpilih (Periode), LY = tahun sebelumnya di bulan yang sama. Filter COMMENT di atas hanya berlaku untuk tab ini.</p>
     </div>
     <div class="sd-filters" role="group" aria-label="Filter Summary DSL">
       <div class="sd-f"><span>MONTH</span><details class="ms" id="sd-month"><summary>Semua</summary><div class="ms-pop"></div></details></div>
       <div class="sd-f sd-wide"><span>Store Name</span><details class="ms" id="sd-store"><summary>Semua</summary><div class="ms-pop"></div></details></div>
       <label class="sd-f sd-wide"><span>TRANSPORTER NAME</span><select id="sd-transporter"><option value="ASG" selected>ASG</option></select></label>
       <label class="sd-f"><span>PERIODE</span><select id="sd-year"></select></label>
+      <div class="sd-f"><span>COMMENT</span><details class="ms" id="sd-cm"><summary>Semua</summary><div class="ms-pop"></div></details></div>
     </div>
     <div class="sd-top">
       <div class="sd-tiles">
@@ -451,7 +462,7 @@ td.empty-cell { text-align: center; color: var(--muted); padding: 24px; }
     <div class="sd-sub-h"><h3 class="sd-h3">Summary by date</h3><p class="note" style="margin:0">Rincian per tanggal janji kirim (TY), mengikuti filter MONTH, Store Name, PERIODE, dan Comment di atas.</p></div>
     <div class="oc-tog"><button class="btn" type="button" id="sd-bydate-tog" aria-expanded="false">▸ Tampilkan Summary by date</button></div>
     <div class="sd-tw" id="sd-bydate" hidden><table class="sd-t" id="sd-t-date"></table></div>
-    <p class="note" style="margin:0">Definisi sementara (silakan dikoreksi): <b>OE</b> = NP On time + Early · <b>Late</b> = NP Late + Outstanding · <b>Ach</b> = OE ÷ ALL NP · <b>RC</b> = NP Late/Outstanding dengan Reason Reschedule Customer (RC) · <b>AMSEN</b> = NP Late/Outstanding dengan Reason Amsen · <b>Late Murni</b> = Late − RC − AMSEN · <b>Adjust RC&amp;AMSEN</b> = (OE + RC + AMSEN) ÷ ALL NP · <b>CTR 2 Day</b> = porsi NP dengan Delivery Parameter Sameday / Next Day / 2 Days.</p>
+    <p class="note" style="margin:0">Definisi sementara (silakan dikoreksi): <b>O+E</b> = NP On time + Early · <b>Late</b> = NP Late + Outstanding · <b>Ach</b> = OE ÷ ALL NP · <b>RC</b> = NP Late/Outstanding dengan Reason Reschedule Customer (RC) · <b>AMSEN</b> = NP Late/Outstanding dengan Reason Amsen · <b>Late Murni</b> = Late − RC − AMSEN · <b>Adjust RC&amp;AMSEN</b> = (OE + RC + AMSEN) ÷ ALL NP · <b>CTR 2 Day</b> = porsi NP dengan Delivery Parameter Sameday / Next Day / 2 Days.</p>
   </section>
 
   <!-- TAB 2 -->
@@ -487,6 +498,7 @@ td.empty-cell { text-align: center; color: var(--muted); padding: 24px; }
         <option value="Amsen"></option>
         <option value="TBSPL – IMPORT KOSONG"></option>
         <option value="TBDC – DELIVERY BROKEN"></option>
+        <option value="TBT"></option>
         <option value="Stok tidak tersedia"></option>
         <option value="Armada penuh"></option>
         <option value="Alamat tidak ditemukan"></option>
@@ -690,7 +702,7 @@ var SB_KEY = "sb_publishable_KiSRfZUjVh1jW2kai0O0_Q_ZWn4oXT_";
   const TABS = ['summary', 'ringkasan', 'gagal', 'semua', 'wa', 'upload'];
   const placeFilter = () => {
     const fb = document.getElementById('tabfilter'); if (!fb) return;
-    const on = FTABS.includes(S.tab); fb.hidden = !on;
+    const on = FTABS.includes(S.tab) && S.tab !== 'summary'; fb.hidden = !on; /* Summary DSL: Comment ada di baris filter tab sendiri */
     fb.classList.toggle('only-cm', S.tab === 'summary');
     if (on) { const pg = document.getElementById(S.tab); if (pg && pg.firstElementChild !== fb) pg.prepend(fb); }
     for (const d of fb.querySelectorAll('details[open]')) d.open = false;
@@ -790,7 +802,7 @@ var SB_KEY = "sb_publishable_KiSRfZUjVh1jW2kai0O0_Q_ZWn4oXT_";
   const isEdited = (u) => hasR(robj(u));
   const brandOf = (u) => { const o = getNp(S.brands, u); return o ? (o.brand || '') : ''; };
   const OC_RE = /reschedule\s*customer|\(rc\)|^\s*rc\b|amsen/i;
-  const REASON_CATS = ['RC', 'AMSEN', 'TBDC', 'TBSPL', 'PECAH', 'INTERNAL', 'SISTEM ERROR'];
+  const REASON_CATS = ['RC', 'AMSEN', 'TBDC', 'TBSPL', 'TBT', 'PECAH', 'INTERNAL', 'SISTEM ERROR'];
   const catOfText = (t) => {
     const r = String(t || '').trim();
     if (!r) return 'Belum diisi';
@@ -799,6 +811,7 @@ var SB_KEY = "sb_publishable_KiSRfZUjVh1jW2kai0O0_Q_ZWn4oXT_";
     if (OC_RE.test(r)) return 'RC';
     if (/tbdc/i.test(r)) return 'TBDC';
     if (/tbspl/i.test(r)) return 'TBSPL';
+    if (/\btbt\b/i.test(r)) return 'TBT';
     if (/pecah/i.test(r)) return 'PECAH';
     if (/internal/i.test(r)) return 'INTERNAL';
     if (/sistem|system|error/i.test(r)) return 'SISTEM ERROR';
@@ -1432,6 +1445,7 @@ var SB_KEY = "sb_publishable_KiSRfZUjVh1jW2kai0O0_Q_ZWn4oXT_";
     const stores = [...new Set(units.map((u) => u.storeName).filter(Boolean))].sort();
     SD.stores = SD.stores.filter((v) => stores.includes(v));
     msFill($('#sd-store'), stores.map((v) => [v, v]), SD.stores, (a) => { SD.stores = a; renderSumDsl(); });
+    if ($('#sd-cm')) { const cmK = units.filter((u) => cmOf(u).kirim).length, cmA = units.filter((u) => cmOf(u).amsen).length; msFill($('#sd-cm'), [['kirim', 'Kirim (' + int(cmK) + ')'], ['amsen', 'Amsen (' + int(cmA) + ')']], F.summary.cms, (a) => { F.summary.cms = ['kirim', 'amsen'].filter((k) => a.includes(k)); renderAll(); }); }
     const base = sdBase();
     const inYear = (u, y) => u.pd.slice(0, 4) === y && (!SD.months.length || SD.months.includes(Number(u.pd.slice(5, 7))));
     const TY = base.filter((u) => inYear(u, yr)), LY = base.filter((u) => inYear(u, ly));
@@ -1529,7 +1543,7 @@ var SB_KEY = "sb_publishable_KiSRfZUjVh1jW2kai0O0_Q_ZWn4oXT_";
         el('tbody', {}, ...(rowsEl.length ? rowsEl : [el('tr', {}, el('td', {colSpan: H.length, style: 'text-align:center;color:var(--muted)', textContent: 'Tidak ada NP Late atau Outstanding pada filter ini.'}))])),
         el('tfoot', {}, el('tr', {}, td('Total'), ...cats.map((k) => td(int(tot[k]))), td(int(grand)), td(int(grand - tot.RC - tot.AMSEN), 'lm'))));
     }
-    const SD_COLS = [['allTY', 'ALL NP TY'], ['oeTY', 'OE TY'], ['lateTY', 'Late TY'], ['achTY', 'Ach TY'], ['lmTY', 'Late Murni TY'], ['rcTY', 'RC TY'], ['amTY', 'AMSEN TY'], ['achCTY', 'Adjust RC&AMSEN TY'], ['ctrTY', 'CTR 2 Day TY'], ['allLY', 'ALL NP LY'], ['oeLY', 'OE LY'], ['lateLY', 'Late LY'], ['achLY', 'Ach LY'], ['lmLY', 'Late Murni LY'], ['rcLY', 'RC LY'], ['amLY', 'AMSEN LY'], ['achCLY', 'Adjust RC&AMSEN LY'], ['ctrLY', 'CTR 2 Day LY']];
+    const SD_COLS = [['allTY', 'ALL NP TY'], ['oeTY', 'O+E TY'], ['lateTY', 'Late TY'], ['achTY', 'Ach TY'], ['lmTY', 'Late Murni TY'], ['rcTY', 'RC TY'], ['amTY', 'AMSEN TY'], ['achCTY', 'Adjust RC&AMSEN TY'], ['ctrTY', 'CTR 2 Day TY'], ['allLY', 'ALL NP LY'], ['oeLY', 'O+E LY'], ['lateLY', 'Late LY'], ['achLY', 'Ach LY'], ['lmLY', 'Late Murni LY'], ['rcLY', 'RC LY'], ['amLY', 'AMSEN LY'], ['achCLY', 'Adjust RC&AMSEN LY'], ['ctrLY', 'CTR 2 Day LY']];
     drawTable($('#sd-t-store'), 'month', 'Bulan', SD_COLS);
     /* Summary by date (TY), disembunyikan sampai dibuka */
     {
@@ -1539,7 +1553,7 @@ var SB_KEY = "sb_publishable_KiSRfZUjVh1jW2kai0O0_Q_ZWn4oXT_";
       btn.setAttribute('aria-expanded', String(!!SD.byDate));
       box.hidden = !SD.byDate;
       if (SD.byDate) {
-        const C = [['all', 'ALL NP', int], ['oe', 'OE', int], ['late', 'Late', int], ['ach', 'Ach', pct], ['lm', 'Late Murni', int], ['rc', 'RC', int], ['am', 'AMSEN', int], ['achC', 'Adjust RC&AMSEN', pct], ['ctr', 'CTR 2 Day', pct]];
+        const C = [['all', 'ALL NP', int], ['oe', 'O+E', int], ['late', 'Late', int], ['ach', 'Ach', pct], ['lm', 'Late Murni', int], ['rc', 'RC', int], ['am', 'AMSEN', int], ['achC', 'Adjust RC&AMSEN', pct], ['ctr', 'CTR 2 Day', pct]];
         const td = (t, cls) => el('td', {class: cls || '', textContent: t});
         const line = (label, a) => el('tr', {}, td(label), ...C.map(([k, , f]) => td(a[k] == null ? '—' : f(a[k]), k === 'achC' ? 'adj' : '')));
         $('#sd-t-date').replaceChildren(
@@ -1569,13 +1583,32 @@ var SB_KEY = "sb_publishable_KiSRfZUjVh1jW2kai0O0_Q_ZWn4oXT_";
       wrap.classList.add('capturing');
       try {
         await new Promise((r) => setTimeout(r, 60));
-        const w = wrap.scrollWidth;
-        const canvas = await html2canvas(wrap, {backgroundColor: getComputedStyle(document.body).backgroundColor || '#ffffff', scale: Math.min(2, window.devicePixelRatio || 1.5), useCORS: true, logging: false, width: w, windowWidth: Math.max(w, document.documentElement.clientWidth)});
-        const blob = await new Promise((res) => canvas.toBlob(res, 'image/png'));
+        try { if (document.fonts && document.fonts.ready) await document.fonts.ready; } catch (_) {}
+        /* Gambar tajam: skala 2-3x; data panjang dipecah per bagian (tidak memotong baris) agar tidak melewati batas ukuran gambar browser */
+        const mob = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent || '') || ((navigator.maxTouchPoints || 0) > 1 && matchMedia('(pointer:coarse)').matches);
+        const MAXD = window.__capMaxDim || (mob ? 8000 : 16000), MAXA = window.__capMaxArea || (mob ? 16e6 : 64e6);
+        const rb = wrap.getBoundingClientRect(), left = rb.left + window.scrollX, top = rb.top + window.scrollY;
+        const w = wrap.scrollWidth, h = wrap.scrollHeight, dpr = window.devicePixelRatio || 1;
+        const sc = Math.max(1, Math.min(dpr >= 1.5 ? 3 : 2, MAXD / w, Math.sqrt(MAXA / (w * 400))));
+        const sliceMax = Math.max(400, Math.floor(Math.min(MAXD / sc, MAXA / (sc * sc * w))));
+        const cuts = [...wrap.querySelectorAll('tr, .card, .sd-sub-h, section > *')].map((e) => { const r = e.getBoundingClientRect(); return Math.round(r.bottom + window.scrollY - top); }).filter((y) => y > 0 && y < h).sort((a, b) => a - b);
+        const parts = []; let y0 = 0;
+        while (y0 < h) { let y1 = Math.min(h, y0 + sliceMax); if (y1 < h) { const c = cuts.filter((y) => y > y0 + sliceMax * 0.5 && y <= y1); if (c.length) y1 = c[c.length - 1]; } parts.push([y0, y1]); y0 = y1; }
         const d = new Date(), stamp = d.getFullYear() + String(d.getMonth() + 1).padStart(2, '0') + String(d.getDate()).padStart(2, '0') + '_' + String(d.getHours()).padStart(2, '0') + String(d.getMinutes()).padStart(2, '0');
-        const name = 'DSL_' + (TAB_NAME[page.id] || page.id) + '_' + stamp + '.png';
-        await downloads.save({filename: name, data: await blob.arrayBuffer()});
-        show('ok', 'Tersimpan: ' + name);
+        const base = 'DSL_' + (TAB_NAME[page.id] || page.id) + '_' + stamp;
+        const bg = getComputedStyle(document.body).backgroundColor || '#ffffff';
+        let name = '';
+        for (let k = 0; k < parts.length; k++) {
+          const [a, b2] = parts[k];
+          if (parts.length > 1) show('', 'Membuat gambar ' + (k + 1) + ' dari ' + parts.length + '…');
+          const canvas = await html2canvas(wrap, {backgroundColor: bg, scale: sc, useCORS: true, logging: false, x: left, y: top + a, width: w, height: b2 - a, windowWidth: Math.max(w, document.documentElement.clientWidth)});
+          const blob = await new Promise((res) => canvas.toBlob(res, 'image/png'));
+          name = base + (parts.length > 1 ? '_bagian-' + (k + 1) + '-dari-' + parts.length : '') + '.png';
+          await downloads.save({filename: name, data: await blob.arrayBuffer()});
+          canvas.width = canvas.height = 0;
+          if (k < parts.length - 1) await new Promise((r) => setTimeout(r, 400));
+        }
+        show('ok', parts.length > 1 ? 'Tersimpan ' + parts.length + ' gambar: ' + base + '_bagian-1…' + parts.length + '.png' : 'Tersimpan: ' + name);
       } catch (e) {
         if (e && e.code === 'declined') msg.hidden = true; else show('err', 'Capture gagal. Coba lagi.');
       } finally { wrap.classList.remove('capturing'); btn.disabled = false; }
@@ -1602,6 +1635,12 @@ var SB_KEY = "sb_publishable_KiSRfZUjVh1jW2kai0O0_Q_ZWn4oXT_";
     L.push('Late = ' + (late.length ? late.length + ' (' + p2f(late.length, c.total) + ')' : ''));
     const rc = new Map(); for (const u of late) { const k = catOf(u); rc.set(k, (rc.get(k) || 0) + 1); }
     L.push('Reason Late = ' + [...rc].sort((a, b) => b[1] - a[1]).map(([k, v]) => k + ' ' + v + ' NP').join(', '), '');
+    /* rincian per NP: "No NP - Nama Customer" lalu "Reason - Detail" */
+    const lord = new Map([...rc].sort((a, b) => b[1] - a[1]).map(([k], i) => [k, i]));
+    for (const u of [...late].sort((a, b) => (lord.get(catOf(a)) - lord.get(catOf(b))) || String(a.np).localeCompare(String(b.np)))) {
+      const det = String(detailOf(u) || '').replace(/\s+/g, ' ').trim();
+      L.push(u.np + ' - ' + String(u.cust || '').replace(/\s+/g, ' ').trim(), catOf(u) + (det ? ' - ' + det : ''), '');
+    }
     L.push('Contribusi:');
     const lab = {'Sameday': 'Sameday', 'Next Day': 'Next Day', '2 Days': '2 Days', 'Up 2 Days': '>2 Days', 'Tidak diketahui': 'Tidak diketahui'};
     const ot = us.filter((u) => u.status === 'ONTIME' || u.status === 'EARLY'); /* Contribusi: dari NP OT */
