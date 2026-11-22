@@ -161,6 +161,23 @@ td.cust-c { min-width: 160px; max-width: 240px; white-space: normal; }
 #wa-send { text-decoration: none; } #wa-msg.ok { color: var(--ok); } #wa-msg.err { color: var(--bad, #c8372d); }
 .capbar { display: flex; justify-content: flex-end; align-items: center; gap: 10px; margin-bottom: -8px; }
 .capbar .cap-msg { font-size: 12.5px; font-weight: 600; }
+#data-info, #cloud-st { display: none !important; }
+.capbar .btn.shot { font-weight: 600; }
+.bk-pick { display: flex; flex-direction: column; gap: 4px; font-size: 12px; background: #fff7e6; border: 1px dashed #e0a43a; border-radius: 8px; padding: 6px 8px; margin: 4px 0; }
+.bk-pick[hidden] { display: none; }
+.bk-t { font-weight: 700; color: #8a5a00; }
+.bk-in { font-size: 12px; max-width: 100%; }
+.bk-list { display: flex; flex-direction: column; gap: 2px; font-size: 11.5px; color: var(--muted); }
+.bk-ok { display: inline-block; margin: 2px 4px; font-size: 11.5px; font-weight: 700; color: var(--accent); text-decoration: none; white-space: nowrap; }
+.bk-ok:hover { text-decoration: underline; }
+.bk-miss { display: inline-block; margin: 2px 4px; font-size: 11px; font-weight: 700; color: #b45309; background: #fff3dc; border-radius: 999px; padding: 1px 7px; white-space: nowrap; }
+.period { margin: 6px 0 0; font-size: 13px; font-weight: 600; opacity: .95; }
+.period:empty { display: none; }
+.credit { margin: 4px 0 0; font-size: 11px; opacity: .8; letter-spacing: .01em; }
+.tabfilter .capbar, .sd-filters .capbar { margin: 0; align-self: flex-end; flex-wrap: wrap; justify-content: flex-start; }
+.sd-filters .capbar { align-self: end; padding-bottom: 2px; }
+.capbar .cap-msg:empty { display: none; }
+.wrap.capturing .tabs { display: none !important; }
 .capbar .cap-msg.ok { color: var(--ok); }
 .capbar .cap-msg.err { color: var(--ots); }
 .wrap.capturing .tablewrap, .wrap.capturing .sd-tw { max-height: none !important; overflow: visible !important; }
@@ -186,6 +203,10 @@ td.cust-c { min-width: 160px; max-width: 240px; white-space: normal; }
 .page > .tabfilter { align-self: flex-start; max-width: 100%; margin-bottom: 2px; }
 .tabfilter.only-cm .fdate { display: none !important; }
 .tabfilter[hidden] { display: none !important; }
+.tabfilter .cm-pop { display: none; }
+.tabfilter.in-card .cm-pop { display: block; min-width: 150px; }
+.tabfilter.in-card .seg { display: none; }
+.tabfilter.in-card { box-shadow: none; background: var(--accent-soft, #eef4fc); margin: 0 0 4px; max-width: none; }
 .flabel { font-size: 12px; color: var(--muted); font-weight: 600; }
 .seg { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
 .seg button { appearance: none; border: 0; background: var(--panel); padding: 6px 12px; font-size: 13px; font-weight: 600; cursor: pointer; display: inline-flex; gap: 6px; }
@@ -361,12 +382,15 @@ td.empty-cell { text-align: center; color: var(--muted); padding: 24px; }
       <h1 id="store-title">Mitra10 Percetakan Negara</h1>
       <p class="sub" id="data-info">Memuat data…</p>
       <p class="sub" id="cloud-st"></p>
+      <p class="period" id="data-period"></p>
+      <p class="credit">Create By Idham Catur Fidiandra</p>
       <button class="btn pinbtn" id="pin-btn" type="button">🔒 Masukkan PIN edit</button>
     </div>
     <div class="filter tabfilter" id="tabfilter" role="group" aria-label="Filter tab ini">
       <label for="f-from" class="fdate">Dari (promised date)<input id="f-from" type="date"></label>
       <label for="f-to" class="fdate">Sampai<input id="f-to" type="date"></label>
       <div class="fgroup fdate"><span class="flabel">Bulan</span><details class="ms" id="f-month"><summary>Semua bulan</summary><div class="ms-pop" id="f-month-pop"></div></details></div>
+      <button class="btn fdate" id="f-today" type="button" title="Tampilkan NP dengan janji kirim hari ini">Hari ini</button>
       <button class="btn fdate" id="f-reset" type="button">Semua tanggal</button>
       <span class="fsep fdate" aria-hidden="true"></span>
       <div class="fgroup">
@@ -376,6 +400,7 @@ td.empty-cell { text-align: center; color: var(--muted); padding: 24px; }
           <button type="button" data-c="kirim" aria-pressed="false">Kirim <span class="num" id="cm-kirim">0</span></button>
           <button type="button" data-c="amsen" aria-pressed="false">Amsen <span class="num" id="cm-amsen">0</span></button>
         </div>
+        <details class="ms cm-pop" id="f-cm"><summary>Semua</summary><div class="ms-pop"></div></details>
       </div>
     </div>
   </header>
@@ -704,8 +729,13 @@ var SB_KEY = "sb_publishable_KiSRfZUjVh1jW2kai0O0_Q_ZWn4oXT_";
     const fb = document.getElementById('tabfilter'); if (!fb) return;
     const on = FTABS.includes(S.tab) && S.tab !== 'summary'; fb.hidden = !on; /* Summary DSL: Comment ada di baris filter tab sendiri */
     fb.classList.toggle('only-cm', S.tab === 'summary');
-    if (on) { const pg = document.getElementById(S.tab); if (pg && pg.firstElementChild !== fb) pg.prepend(fb); }
+    fb.classList.toggle('in-card', S.tab === 'gagal');
+    if (on) { const pg = document.getElementById(S.tab); if (S.tab === 'gagal') { const cd = pg && pg.querySelector(':scope > .card'), c1 = cd && cd.querySelector(':scope > .ctrl'); if (c1 && fb.nextElementSibling !== c1) cd.insertBefore(fb, c1); } else if (pg && pg.firstElementChild !== fb) pg.prepend(fb); }
     for (const d of fb.querySelectorAll('details[open]')) d.open = false;
+    /* tombol Screenshot tab aktif ditaruh di samping filter Comment */
+    for (const cb of document.querySelectorAll('.capbar[data-page]')) { const home = document.getElementById(cb.dataset.page); if (cb.dataset.page !== S.tab && home && cb.parentElement !== home) home.prepend(cb); }
+    const cap = document.querySelector('.capbar[data-page="' + S.tab + '"]');
+    if (cap) { if (on) { if (cap.parentElement !== fb) fb.append(cap); } else if (S.tab === 'summary') { const sf = document.querySelector('#summary .sd-filters'); if (sf && cap.parentElement !== sf) sf.append(cap); } }
     if (S.loaded) { try { renderHeader(); } catch (e) {} }
   };
   const showTab = (id) => {
@@ -843,6 +873,7 @@ var SB_KEY = "sb_publishable_KiSRfZUjVh1jW2kai0O0_Q_ZWn4oXT_";
     $('#data-info').textContent = S.rows.length
       ? int(S.rows.length) + ' baris item · ' + int(S.units.length) + ' NP · janji kirim ' + dDate(dates[0], true) + ' – ' + dDate(dates[dates.length - 1], true) + ' · ' + int(S.uploads.length) + ' file'
       : 'Belum ada data. Upload file di tab Data & Upload.';
+    if ($('#data-period')) $('#data-period').textContent = dates.length ? 'Periode data DSL: ' + dDate(dates[0], true) + ' – ' + dDate(dates[dates.length - 1], true) + ' (berdasarkan Promised Delivery Date)' : '';
     for (const i of [$('#f-from'), $('#f-to')]) { i.min = dates[0] || ''; i.max = dates[dates.length - 1] || ''; }
     if (document.activeElement !== $('#f-from')) $('#f-from').value = S.from || dates[0] || '';
     if (document.activeElement !== $('#f-to')) $('#f-to').value = S.to || dates[dates.length - 1] || '';
@@ -852,7 +883,8 @@ var SB_KEY = "sb_publishable_KiSRfZUjVh1jW2kai0O0_Q_ZWn4oXT_";
     S.months = S.months.filter((m) => months.includes(m));
     const mlab = (m) => BLN[+m.slice(5) - 1] + ' ' + m.slice(0, 4);
     chipSync('.seg [data-c]', 'c', S.cms);
-    { const bd = selDate(); $('#cm-kirim').textContent = int(bd.filter((u) => cmOf(u).kirim).length); $('#cm-amsen').textContent = int(bd.filter((u) => cmOf(u).amsen).length); }
+    { const bd = selDate(), nK = bd.filter((u) => cmOf(u).kirim).length, nA = bd.filter((u) => cmOf(u).amsen).length; $('#cm-kirim').textContent = int(nK); $('#cm-amsen').textContent = int(nA);
+      if ($('#f-cm')) msFill($('#f-cm'), [['kirim', 'Kirim (' + int(nK) + ')'], ['amsen', 'Amsen (' + int(nA) + ')']], S.cms, (a) => { S.cms = ['kirim', 'amsen'].filter((k) => a.includes(k)); renderAll(); }); }
     $('#f-month summary').textContent = !S.months.length ? 'Semua bulan' : S.months.length === 1 ? mlab(S.months[0]) : S.months.length + ' bulan dipilih';
     $('#f-month-pop').replaceChildren(...months.map((m) => { const cb = el('input', {type: 'checkbox', value: m, checked: S.months.includes(m)}); cb.dataset.month = m; return el('label', {}, cb, ' ' + mlab(m)); }),
       el('div', {class: 'ms-act'}, el('button', {type: 'button', class: 'btn', textContent: 'Semua', onclick: () => { S.months = months.slice(); renderAll(); }}), el('button', {type: 'button', class: 'btn', textContent: 'Kosongkan', onclick: () => { S.months = []; renderAll(); }})));
@@ -1040,6 +1072,45 @@ var SB_KEY = "sb_publishable_KiSRfZUjVh1jW2kai0O0_Q_ZWn4oXT_";
     view();
     return td;
   };
+  /* ===== Bukti RC: gambar ke Google Drive + baris di Google Sheet (lewat Apps Script milik toko) ===== */
+  const BUKTI_URL = 'https://script.google.com/macros/s/AKfycbyteVo9ZLxUZGtganPaG6uthDeExCnJB9w2ZJ8npZZxUb1a4AYIpyYhJ_jKqDvQb5ZBog/exec';
+  const EVI = new Map(); let eviLoaded = false;
+  const loadBukti = async () => {
+    try { const r = await fetch(BUKTI_URL, {redirect: 'follow'}); const j = await r.json();
+      if (j && j.ok) { EVI.clear(); for (const x of j.list || []) EVI.set(String(x.np), x); eviLoaded = true; try { withTab('gagal', renderTable); } catch (e) {} } } catch (e) {}
+  };
+  const shrinkImg = (file) => new Promise((res, rej) => {
+    const url = URL.createObjectURL(file), im = new Image();
+    im.onload = () => { const M = 1600, k = Math.min(1, M / Math.max(im.width, im.height)), c = document.createElement('canvas');
+      c.width = Math.round(im.width * k); c.height = Math.round(im.height * k); const g = c.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0, 0, c.width, c.height); g.drawImage(im, 0, 0, c.width, c.height);
+      URL.revokeObjectURL(url); res({name: file.name, mime: 'image/jpeg', b64: c.toDataURL('image/jpeg', 0.82).split(',')[1]}); };
+    im.onerror = () => { URL.revokeObjectURL(url); rej(new Error('File bukan gambar: ' + file.name)); };
+    im.src = url;
+  });
+  const uploadBukti = async (u, files, reason, detail) => {
+    const imgs = []; for (const f of files) imgs.push(await shrinkImg(f));
+    const r = await fetch(BUKTI_URL, {method: 'POST', redirect: 'follow', headers: {'Content-Type': 'text/plain;charset=utf-8'},
+      body: JSON.stringify({pin: PIN, np: u.np, cust: u.cust || '', pd: u.pd || '', reason: reason || 'RC', detail: detail || '', files: imgs})});
+    const j = await r.json();
+    if (!j || !j.ok) throw new Error(j && j.error === 'PIN salah' ? 'PIN salah. Masukkan PIN lagi.' : 'Upload gambar gagal' + (j && j.error ? ': ' + j.error : '.'));
+    const o = EVI.get(u.np) || {np: u.np, count: 0, folder: j.folder}; o.count += j.count; o.folder = j.folder; EVI.set(u.np, o);
+    return j;
+  };
+  /* kotak pilih gambar (boleh beberapa) */
+  const buktiPicker = () => {
+    const inp = el('input', {type: 'file', accept: 'image/*', multiple: true, class: 'bk-in'});
+    const list = el('div', {class: 'bk-list'});
+    inp.addEventListener('change', () => { list.replaceChildren(...[...inp.files].map((f) => el('span', {class: 'bk-f', textContent: '🖼 ' + f.name}))); });
+    const lab = el('label', {class: 'bk-pick'}, el('span', {class: 'bk-t', textContent: '📎 Upload gambar bukti RC (wajib, boleh lebih dari 1)'}), inp, list);
+    return {lab, files: () => [...inp.files]};
+  };
+  const buktiBadge = (u, isRc) => {
+    const e = EVI.get(u.np);
+    if (e && e.count) return el('a', {class: 'bk-ok', href: e.folder, target: '_blank', rel: 'noopener', title: 'Buka folder bukti di Google Drive', textContent: '📎 ' + e.count + ' bukti'});
+    if (isRc && eviLoaded) return el('span', {class: 'bk-miss', title: 'NP dengan Reason RC wajib punya gambar bukti', textContent: '⚠ bukti belum ada'});
+    return null;
+  };
+
   const reasonCell = (u) => {
     const td = el('td', {class: 'reason'});
     const view = () => {
@@ -1047,11 +1118,25 @@ var SB_KEY = "sb_publishable_KiSRfZUjVh1jW2kai0O0_Q_ZWn4oXT_";
       td.replaceChildren(rCat ? el('span', {class: 'cat-chip' + (rCat === 'Lainnya' ? ' other' : ''), style: 'margin-left:0', textContent: rCat, title: rTxt !== rCat ? 'Teks Reason asli: ' + rTxt : ''}) : el('span', {textContent: '—'}));
       if (isEdited(u)) td.append(el('span', {class: 'edited', textContent: 'diubah', title: 'Reason asli: ' + (u.reason.join('; ') || autoReason(u) || '—')}));
       else if (isAuto(u)) td.append(el('span', {class: 'edited', textContent: 'otomatis', title: 'Diisi otomatis karena Comment berisi “amsen”'}));
+      const bb = buktiBadge(u, rCat === 'RC'); if (bb) td.append(bb);
       if (S.unlocked) {
         const eb = el('button', {class: 'mini', type: 'button', textContent: 'Edit', 'aria-label': 'Edit reason ' + u.np});
         eb.addEventListener('click', edit);
         td.append(eb);
+        if (rCat === 'RC') { const ab = el('button', {class: 'mini', type: 'button', textContent: '+ Bukti', title: 'Tambah gambar bukti RC'}); ab.addEventListener('click', addBukti); td.append(ab); }
       }
+    };
+    const addBukti = () => {
+      const pk = buktiPicker(), save = el('button', {class: 'mini primary', type: 'button', textContent: 'Upload'}), cancel = el('button', {class: 'mini', type: 'button', textContent: 'Batal'});
+      const err = el('div', {class: 'rerr', hidden: true});
+      cancel.addEventListener('click', view);
+      save.addEventListener('click', async () => {
+        const fs = pk.files(); if (!fs.length) { err.hidden = false; err.textContent = 'Pilih minimal 1 gambar.'; return; }
+        save.disabled = true; save.textContent = 'Mengupload…';
+        try { await uploadBukti(u, fs, 'RC', detailOf(u)); view(); }
+        catch (e) { err.hidden = false; err.textContent = (e && e.message) || 'Upload gagal.'; save.disabled = false; save.textContent = 'Upload'; }
+      });
+      td.replaceChildren(el('div', {class: 'redit'}, pk.lab, el('div', {class: 'rbtns'}, save, cancel), err));
     };
     const edit = () => {
       const inp = el('select', {class: 'rin'});
@@ -1061,7 +1146,10 @@ var SB_KEY = "sb_publishable_KiSRfZUjVh1jW2kai0O0_Q_ZWn4oXT_";
       const save = el('button', {class: 'mini primary', type: 'button', textContent: 'Simpan'});
       const cancel = el('button', {class: 'mini', type: 'button', textContent: 'Batal'});
       const err = el('div', {class: 'rerr', hidden: true});
-      const box = el('div', {class: 'redit'}, inp, el('div', {class: 'rbtns'}, save, cancel), err);
+      const pk = buktiPicker();
+      const box = el('div', {class: 'redit'}, inp, pk.lab, el('div', {class: 'rbtns'}, save, cancel), err);
+      const syncPk = () => { pk.lab.hidden = inp.value !== 'RC'; const e = EVI.get(u.np); pk.lab.querySelector('.bk-t').textContent = e && e.count ? '📎 Tambah gambar bukti RC (opsional, sudah ada ' + e.count + ')' : '📎 Upload gambar bukti RC (wajib, boleh lebih dari 1)'; };
+      inp.addEventListener('change', syncPk); syncPk();
       if (isEdited(u)) {
         const rv = el('button', {class: 'mini', type: 'button', textContent: 'Kembalikan asli'});
         rv.addEventListener('click', async () => { rv.disabled = true; try { const o = robj(u); if (o && o.detail != null) await saveReasonDoc(u, {reason: undefined}); else await db.doc('reasons/' + rid(u)).delete(); } catch (e) { err.hidden = false; err.textContent = 'Gagal mengembalikan. Coba lagi.'; rv.disabled = false; } });
@@ -1070,7 +1158,10 @@ var SB_KEY = "sb_publishable_KiSRfZUjVh1jW2kai0O0_Q_ZWn4oXT_";
       cancel.addEventListener('click', view);
       const doSave = async () => {
         if (!inp.value) { err.hidden = false; err.textContent = 'Pilih salah satu kategori reason.'; return; }
-        save.disabled = true; save.textContent = 'Menyimpan…';
+        const fs = pk.files(), has = (EVI.get(u.np) || {}).count > 0;
+        if (inp.value === 'RC' && !fs.length && !has) { err.hidden = false; err.textContent = 'Reason RC wajib upload gambar bukti.'; return; }
+        save.disabled = true; save.textContent = fs.length && inp.value === 'RC' ? 'Mengupload gambar…' : 'Menyimpan…';
+        if (inp.value === 'RC' && fs.length) { try { await uploadBukti(u, fs, 'RC', detailOf(u)); } catch (e) { err.hidden = false; err.textContent = (e && e.message) || 'Upload gambar gagal.'; save.disabled = false; save.textContent = 'Simpan'; return; } save.textContent = 'Menyimpan…'; }
         try { await saveReasonDoc(u, {reason: inp.value.trim()}); }
         catch (e) { err.hidden = false; err.textContent = e && e.code === 'invalid_argument' ? 'PIN salah atau sudah tidak berlaku. Masukkan PIN lagi.' : 'Gagal menyimpan. Periksa internet lalu coba lagi.'; save.disabled = false; save.textContent = 'Simpan'; }
       };
@@ -1081,6 +1172,7 @@ var SB_KEY = "sb_publishable_KiSRfZUjVh1jW2kai0O0_Q_ZWn4oXT_";
     view();
     return td;
   };
+  loadBukti();
 
   /* ===== analisa Late & OTS per Reason / Master Brand ===== */
   const NONE = 'Belum diisi';
@@ -1572,11 +1664,11 @@ var SB_KEY = "sb_publishable_KiSRfZUjVh1jW2kai0O0_Q_ZWn4oXT_";
   const TAB_NAME = {summary: 'Summary_DSL', ringkasan: 'Analisa_DSL', gagal: 'NP_Late_Outstanding', semua: 'All_Data_Pengiriman', wa: 'Report_WA', upload: 'Data_Upload'};
   for (const page of $$('.page[role=tabpanel]')) {
     const msg = el('span', {class: 'cap-msg', hidden: true});
-    const btn = el('button', {class: 'btn primary', type: 'button', title: 'Simpan tampilan tab ini sebagai gambar PNG'});
-    btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>Capture tab ini';
+    const btn = el('button', {class: 'btn shot', type: 'button', title: 'Screenshot tampilan tab ini sebagai gambar PNG'});
+    btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>Screenshot';
     btn.addEventListener('click', async () => {
       const show = (cls, t) => { msg.className = 'cap-msg ' + cls; msg.textContent = t; msg.hidden = false; };
-      if (!window.html2canvas) { show('err', 'Alat capture belum termuat. Muat ulang halaman lalu coba lagi.'); return; }
+      if (!window.html2canvas) { show('err', 'Alat screenshot belum termuat. Muat ulang halaman lalu coba lagi.'); return; }
       if (!downloads) { show('err', 'Simpan file tidak tersedia di tampilan ini.'); return; }
       const wrap = $('.wrap');
       btn.disabled = true; show('', 'Membuat gambar…');
@@ -1601,7 +1693,7 @@ var SB_KEY = "sb_publishable_KiSRfZUjVh1jW2kai0O0_Q_ZWn4oXT_";
         for (let k = 0; k < parts.length; k++) {
           const [a, b2] = parts[k];
           if (parts.length > 1) show('', 'Membuat gambar ' + (k + 1) + ' dari ' + parts.length + '…');
-          const canvas = await html2canvas(wrap, {backgroundColor: bg, scale: sc, useCORS: true, logging: false, x: left, y: top + a, width: w, height: b2 - a, windowWidth: Math.max(w, document.documentElement.clientWidth)});
+          const canvas = await html2canvas(wrap, {backgroundColor: bg, scale: sc, useCORS: true, logging: false, x: 0, y: a, width: w, height: b2 - a, windowWidth: Math.max(w, document.documentElement.clientWidth)});
           const blob = await new Promise((res) => canvas.toBlob(res, 'image/png'));
           name = base + (parts.length > 1 ? '_bagian-' + (k + 1) + '-dari-' + parts.length : '') + '.png';
           await downloads.save({filename: name, data: await blob.arrayBuffer()});
@@ -1610,11 +1702,13 @@ var SB_KEY = "sb_publishable_KiSRfZUjVh1jW2kai0O0_Q_ZWn4oXT_";
         }
         show('ok', parts.length > 1 ? 'Tersimpan ' + parts.length + ' gambar: ' + base + '_bagian-1…' + parts.length + '.png' : 'Tersimpan: ' + name);
       } catch (e) {
-        if (e && e.code === 'declined') msg.hidden = true; else show('err', 'Capture gagal. Coba lagi.');
+        if (e && e.code === 'declined') msg.hidden = true; else show('err', 'Screenshot gagal. Coba lagi.');
       } finally { wrap.classList.remove('capturing'); btn.disabled = false; }
     });
-    page.prepend(el('div', {class: 'capbar'}, msg, btn));
+    const cbar = el('div', {class: 'capbar'}, btn, msg); cbar.dataset.page = page.id; page.prepend(cbar);
   }
+
+  placeFilter();
 
   /* ===== REPORT WA ===== */
   const W = {date: '', foot: (() => { try { return localStorage.getItem('dsl_wa_foot'); } catch (e) { return null; } })()};
@@ -1745,6 +1839,7 @@ var SB_KEY = "sb_publishable_KiSRfZUjVh1jW2kai0O0_Q_ZWn4oXT_";
     i.addEventListener('blur', renderHeader);
   }
   $('#f-reset').addEventListener('click', () => { S.from = ''; S.to = ''; S.months = []; renderAll(); });
+  $('#f-today').addEventListener('click', () => { const t = new Date(), iso = t.getFullYear() + '-' + String(t.getMonth() + 1).padStart(2, '0') + '-' + String(t.getDate()).padStart(2, '0'); S.from = iso; S.to = iso; S.months = []; renderAll(); });
   $('#f-month').addEventListener('change', (e) => { const m = e.target.dataset && e.target.dataset.month; if (!m) return; S.months = e.target.checked ? [...new Set([...S.months, m])].sort() : S.months.filter((x) => x !== m); renderAll(); });
   document.addEventListener('click', (e) => { for (const d of $$('details.ms[open]')) if (!d.contains(e.target)) d.open = false; });
   chipMulti('.chip[data-f]', 'f', () => S.fs, (a) => { S.fs = a; }, () => renderTable());
